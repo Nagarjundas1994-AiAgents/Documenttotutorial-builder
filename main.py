@@ -1,0 +1,142 @@
+import os
+import asyncio
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from dotenv import load_dotenv
+
+from utils.crawler import Crawler
+from utils.vector_store import VectorStoreManager
+from agents.graph import create_tutorial_graph
+
+load_dotenv()
+
+app = FastAPI()
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Global instances
+vector_store_manager = VectorStoreManager()
+tutorial_graph = create_tutorial_graph()
+
+class GenerationRequest(BaseModel):
+    url: str
+    depth: int
+
+@app.get("/")
+async def read_index():
+    return FileResponse('static/index.html')
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_json()
+            url = data.get("url")
+            depth = int(data.get("depth", 2))
+
+            if not url:
+                await websocket.send_json({"type": "error", "message": "URL is required."})
+                continue
+
+            # --- 1. CRAWLING ---
+            await websocket.send_json({"type": "status", "agent": "crawler", "status": "working", "progress": 10, "message": f"Starting crawl for {url}"})
+            crawler = Crawler(base_url=url, max_depth=depth)
+            all_pages = []
+            urls_found = 0
+            async for item in crawler.crawl():
+                if item['type'] == 'url_found':
+                    urls_found += 1
+                    await websocket.send_json({"type": "stats_update", "stats": {"urlsFound": urls_found}})
+                elif item['type'] == 'page_crawled':
+                    await websocket.send_json({"type": "status", "agent": "content", "status": "working", "progress": 30, "message": f"Processing {item['url']}"})
+                elif item['type'] == 'crawl_complete':
+                    all_pages = item['content']
+                    await websocket.send_json({"type": "status", "agent": "crawler", "status": "completed", "progress": 100, "message": f"Crawl complete. Found {item['total_pages']} pages."})
+                    await websocket.send_json({"type": "stats_update", "stats": {"urlsProcessed": item['total_pages']}})
+
+            if not all_pages:
+                await websocket.send_json({"type": "error", "message": "Could not find any content to process."})
+                continue
+            
+            # --- 2. VECTOR STORE UPSERT ---
+            await websocket.send_json({"type": "status", "agent": "analysis", "status": "working", "progress": 10, "message": "Embedding and storing content..."})
+            docs_upserted = vector_store_manager.upsert_documents(all_pages)
+            await websocket.send_json({"type": "status", "agent": "analysis", "status": "completed", "progress": 100, "message": f"Stored {docs_upserted} document chunks."})
+
+            # --- 3. LANGGRAPH TUTORIAL GENERATION ---
+            full_content = "\n\n---\n\n".join([f"Source URL: {p['url']}\n\n{p['content']}" for p in all_pages])
+            
+            initial_state = {
+                "original_query": f"Create a tutorial from the documentation at {url}",
+                "scraped_content": full_content
+            }
+
+            # Stream LangGraph progress
+            async for event in tutorial_graph.astream(initial_state):
+                for key, value in event.items():
+                    if key == 'generate_outline':
+                        await websocket.send_json({"type": "status", "agent": "structure", "status": "working", "progress": 25, "message": "Generating tutorial outline..."})
+                    elif key == 'write_section':
+                        await websocket.send_json({"type": "status", "agent": "tutorial", "status": "working", "progress": 50, "message": f"Writing section: {value['current_section_key']}"})
+                    elif key == 'compile_tutorial':
+                        await websocket.send_json({"type": "status", "agent": "tutorial", "status": "working", "progress": 90, "message": "Compiling final tutorial..."})
+
+            # Get final result
+            final_state = await tutorial_graph.ainvoke(initial_state)
+
+            if final_state.get("error_message"):
+                 await websocket.send_json({"type": "error", "message": final_state["error_message"]})
+            else:
+                # --- 4. SEND FINAL RESULT ---
+                await websocket.send_json({"type": "status", "agent": "tutorial", "status": "completed", "progress": 100, "message": "Tutorial generation complete!"})
+                
+                # Create a simplified result for the frontend
+                result_data = {
+                    "title": final_state['tutorial_outline'].get('title', 'Generated Tutorial'),
+                    "description": "A comprehensive tutorial generated by the AI agent system.",
+                    "sections": [
+                        {"title": s['title'], "content": final_state['section_drafts'].get(str(i), "")}
+                        for i, s in enumerate(final_state['tutorial_outline'].get('sections', []))
+                    ]
+                }
+                await websocket.send_json({"type": "result", "data": result_data})
+
+
+    except WebSocketDisconnect:
+        print("Client disconnected")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        try:
+            await websocket.send_json({"type": "error", "message": str(e)})
+        except:
+            pass
+
+# New endpoint for Q&A
+@app.post("/ask")
+async def ask_question(request: dict):
+    query = request.get("query")
+    if not query:
+        return {"error": "Query is required."}
+    
+    context_docs = await vector_store_manager.query(query)
+    context = "\n\n".join([doc['text'] for doc in context_docs])
+
+    prompt = ChatPromptTemplate.from_template(
+        """Answer the user's question based on the following context from the documentation.
+        If the context doesn't contain the answer, say that you don't know.
+
+        Context:
+        {context}
+
+        Question: {question}
+        
+        Answer:"""
+    )
+    chain = prompt | llm | StrOutputParser()
+    answer = await chain.ainvoke({"context": context, "question": query})
+    
+    return {"answer": answer, "sources": [doc['metadata']['source_url'] for doc in context_docs]}
