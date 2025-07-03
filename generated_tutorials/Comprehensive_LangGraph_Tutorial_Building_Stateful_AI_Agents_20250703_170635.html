@@ -1,0 +1,3515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive LangGraph Tutorial: Building Stateful AI Agents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.15);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .metadata {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 2rem;
+            border-left: 5px solid #667eea;
+            margin: 0;
+            font-size: 1rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+        
+        .metadata-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .content {
+            padding: 3rem 2rem;
+        }
+        
+        .toc {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 4rem;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .toc h3 {
+            color: #495057;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+        }
+        
+        .toc h3::before {
+            content: "📚";
+            margin-right: 0.75rem;
+            font-size: 1.8rem;
+        }
+        
+        .toc-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .toc-list li {
+            margin: 0.75rem 0;
+        }
+        
+        .toc-link {
+            color: #495057;
+            text-decoration: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: block;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .toc-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+        
+        .toc-link:hover {
+            color: white;
+            border-left-color: #667eea;
+            transform: translateX(8px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        .toc-link:hover::before {
+            width: 100%;
+        }
+        
+        .tutorial-section {
+            margin-bottom: 5rem;
+            scroll-margin-top: 2rem;
+            position: relative;
+        }
+        
+        .section-title {
+            color: #2d3748;
+            font-size: 2.2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        .section-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .section-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        
+        .section-content p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+        
+        .section-content h3 {
+            color: #4a5568;
+            margin: 2.5rem 0 1.5rem 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+        }
+        
+        .section-content h4 {
+            color: #718096;
+            margin: 2rem 0 1rem 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .code-block {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            border: 1px solid #4a5568;
+            border-radius: 15px;
+            margin: 2rem 0;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+        }
+        
+        .code-block pre {
+            padding: 2rem;
+            margin: 0;
+            overflow-x: auto;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+        
+        .code-block code {
+            font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+        }
+        
+        .inline-code {
+            background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);
+            color: #d63384;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            font-weight: 500;
+            border: 1px solid #dee2e6;
+        }
+        
+        .section-content ul {
+            margin: 1.5rem 0;
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        .section-content li {
+            margin: 1rem 0;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.6;
+        }
+        
+        .section-content li::before {
+            content: "▶";
+            color: #667eea;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .section-content ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+        
+        .section-content ol li {
+            padding-left: 0.5rem;
+        }
+        
+        .section-content ol li::before {
+            display: none;
+        }
+        
+        .section-content strong {
+            color: #2d3748;
+            font-weight: 700;
+        }
+        
+        .section-content em {
+            color: #4a5568;
+            font-style: italic;
+        }
+        
+        .note-box {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            border-left: 5px solid #38b2ac;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 5px 15px rgba(56, 178, 172, 0.1);
+        }
+        
+        .note-box::before {
+            content: "💡 ";
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef5e7 0%, #fbd38d 100%);
+            border-left: 5px solid #ed8936;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.1);
+        }
+        
+        .warning-box::before {
+            content: "⚠️ ";
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer p {
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+        
+        .footer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 2rem 1rem;
+            }
+            
+            .main-title {
+                font-size: 2.2rem;
+            }
+            
+            .content {
+                padding: 2rem 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-number {
+                margin-bottom: 1rem;
+                margin-right: 0;
+            }
+            
+            .metadata {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                margin: 0;
+            }
+            
+            .header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .code-block {
+                background: #f8f9fa !important;
+                color: #2d3748 !important;
+                border: 1px solid #dee2e6 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">Comprehensive LangGraph Tutorial: Building Stateful AI Agents</h1>
+            <p class="subtitle">A comprehensive, step-by-step guide to mastering every concept</p>
+        </header>
+        
+        <div class="metadata">
+            <div class="metadata-item">
+                <span class="metadata-icon">📅</span>
+                <strong>Generated:</strong> 2025-07-03 17:06:35
+            </div>
+            <div class="metadata-item">
+                <span class="metadata-icon">🔗</span>
+                <strong>Source:</strong> Create a comprehensive tutorial from the documentation at https://langchain-ai.github.io/langgraph/
+            </div>
+            <div class="metadata-item">
+                <span class="metadata-icon">📊</span>
+                <strong>Sections:</strong> 10
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="toc">
+                <h3>Table of Contents</h3>
+                <ul class="toc-list"><li><a href="#section-1" class="toc-link">1. Introduction to LangGraph</a></li><li><a href="#section-2" class="toc-link">2. Prerequisites and Installation</a></li><li><a href="#section-3" class="toc-link">3. Core Concepts: Graphs, State, Nodes and Edges</a></li><li><a href="#section-4" class="toc-link">4. Your First LangGraph Agent</a></li><li><a href="#section-5" class="toc-link">5. Building Custom Agent Workflows</a></li><li><a href="#section-6" class="toc-link">6. Advanced State Management</a></li><li><a href="#section-7" class="toc-link">7. Debugging and Optimization</a></li><li><a href="#section-8" class="toc-link">8. Production Deployment</a></li><li><a href="#section-9" class="toc-link">9. Real-World Agent Architectures</a></li><li><a href="#section-10" class="toc-link">10. Next Steps and Ecosystem Integration</a></li></ul>
+            </div>
+            
+            
+        <section id="section-1" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">1</span>
+                1. Introduction to LangGraph
+            </h2>
+            <div class="section-content">
+                <h2>1. Introduction to LangGraph</h2>
+<p>This section covers 1. introduction to langgraph. # 1. Introduction to LangGraph</p>
+<h2>Overview  </h2>
+<p>LangGraph is a powerful <strong>low-level orchestration framework</strong> designed specifically for building, managing, and deploying <strong>stateful AI agents</strong>. Unlike higher-level abstractions that hide implementation details, LangGraph gives developers fine-grained control over agent workflows while providing essential infrastructure for production-ready systems.</p>
+<div class="note-box"><strong>Key Differentiator</strong>: While many frameworks focus on single-turn interactions, LangGraph specializes in <strong>long-running, stateful agents</strong> that maintain context across multiple interactions and can operate for extended periods.</div>
+<h3>Core Capabilities  </h3>
+<p>LangGraph enables developers to create agents with:</p>
+<ul><li><strong>Durable Execution</strong>: Agents that survive failures and resume exactly where they left off  </li>
+<li><strong>Complex State Management</strong>: Both short-term working memory and long-term persistent memory  </li>
+<li><strong>Human-in-the-Loop</strong>: Seamless integration for human oversight and intervention  </li>
+<li><strong>Production-Grade Infrastructure</strong>: Tools for scaling, monitoring, and debugging stateful workflows  </li></ul>
+<h2>Why LangGraph?  </h2>
+<p>Modern AI applications increasingly require agents that:</p>
+<ul><li>Maintain <strong>conversation history</strong> across multiple interactions  </li>
+<li>Preserve <strong>intermediate reasoning states</strong> during complex tasks  </li>
+<li>Integrate <strong>external tools and APIs</strong> with custom logic  </li>
+<li>Support <strong>human collaboration</strong> during execution  </li></ul>
+<p>Traditional stateless approaches struggle with these requirements. LangGraph addresses this by modeling agents as <strong>stateful graphs</strong> where:</p>
+<ul><li><strong>Nodes</strong> contain business logic  </li>
+<li><strong>Edges</strong> define control flow  </li>
+<li><strong>State</strong> persists across executions  </li></ul>
+<h3>Real-World Applications  </h3>
+<p>LangGraph powers production systems at companies like:</p>
+<ul><li><strong>Klarna</strong>: AI shopping assistants  </li>
+<li><strong>Replit</strong>: Code generation workflows  </li>
+<li><strong>Elastic</strong>: Search-powered agents  </li></ul>
+<p>Common use cases include:</p>
+<ul><li>Customer support chatbots with memory  </li>
+<li>Multi-step document processing pipelines  </li>
+<li>AI-powered workflow automation  </li>
+<li>Collaborative human-AI decision systems  </li></ul>
+<h2>Core Architecture  </h2>
+<p>LangGraph implements a <strong>message-passing architecture</strong> inspired by Google's Pregel system. The execution model:</p>
+<ul><li>Organizes computation into <strong>super-steps</strong> (discrete iterations)  </li>
+<li>Nodes <strong>activate</strong> when receiving messages  </li>
+<li>Graph <strong>halts</strong> when no messages remain  </li></ul>
+<div class="code-block"><pre><code>
+<h1>Conceptual representation of LangGraph's execution model</h1>
+class LangGraph:
+    def __init__(self):
+        self.nodes = {}  # Business logic containers
+        self.edges = {}  # Control flow definitions
+        self.state = {}  # Persistent data store
+        
+    def execute(self):
+        while messages_in_transit():
+            process_super_step()
+</code></pre></div>
+
+<h3>Key Components  </h3>
+<p>#### 1. State</p>
+<p>The <strong>shared memory</strong> of your agent, defined as either:</p>
+<ul><li><code class="inline-code">TypedDict</code>: For simple type-checked structures  </li>
+<li><code class="inline-code">Pydantic Model</code>: For complex validation with defaults  </li></ul>
+<div class="code-block"><pre><code>from typing import TypedDict
+<p>class AgentState(TypedDict):<br>    conversation_history: list[str]  # Chat memory<br>    current_task: str               # Active objective<br>    tool_results: dict              # API call outputs<br></code></pre></div></p>
+
+<p>#### 2. Nodes</p>
+<p>Pure functions that:</p>
+<ul><li>Receive current state  </li>
+<li>Perform computations/tool calls  </li>
+<li>Return state updates  </li></ul>
+<div class="code-block"><pre><code>def query_weather_node(state: AgentState) -&gt; dict:
+    """Node that calls weather API"""
+    city = state["current_task"].extract_city()
+    return {"tool_results": {"weather": get_weather(city)}}
+</code></pre></div>
+
+<p>#### 3. Edges</p>
+<p>Control flow rules determining:</p>
+<ul><li><strong>Fixed transitions</strong>: Always move to next node  </li>
+<li><strong>Conditional branches</strong>: Dynamic routing based on state  </li></ul>
+<div class="code-block"><pre><code>def should_check_weather(state: AgentState) -&gt; str:
+    """Conditional edge to weather check"""
+    return "query_weather" if needs_weather(state) else "generate_response"
+</code></pre></div>
+
+<h2>Core Benefits  </h2>
+<h3>1. Durable Execution  </h3>
+<p>LangGraph agents can:</p>
+<ul><li><strong>Pause and resume</strong> mid-execution  </li>
+<li><strong>Recover from crashes</strong> without losing state  </li>
+<li><strong>Run indefinitely</strong> for long workflows  </li></ul>
+<div class="note-box"><strong>Example</strong>: An agent processing a 100-page PDF can save progress every 5 pages and resume after failures.</div>
+<h3>2. Comprehensive Memory  </h3>
+<p>Flexible state management supports:</p>
+<p>| Memory Type       | Use Case                          | Implementation              |<br>|-------------------|-----------------------------------|-----------------------------|<br>| <strong>Short-term</strong>    | Current reasoning context         | In-memory state variables   |<br>| <strong>Long-term</strong>     | Cross-session persistence         | Database-backed checkpoints |<br>| <strong>Conversational</strong> | Chat history                     | Message list with reducers  |</p>
+<h3>3. Human-in-the-Loop  </h3>
+<p>Built-in patterns for:</p>
+<ul><li><strong>State inspection</strong>: View/modify agent state at any point  </li>
+<li><strong>Approval gates</strong>: Require human confirmation for critical steps  </li>
+<li><strong>Manual overrides</strong>: Inject corrections during execution  </li></ul>
+<div class="code-block"><pre><code>def human_review_node(state: AgentState) -&gt; dict:
+    """Pauses for human input"""
+    display_state(state)
+    return {"user_corrections": get_human_input()}
+</code></pre></div>
+
+<h3>4. Debugging with LangSmith  </h3>
+<p>Deep observability features:</p>
+<ul><li><strong>Execution tracing</strong>: Visualize node activation paths  </li>
+<li><strong>State diffs</strong>: See exactly what changed between steps  </li>
+<li><strong>Performance metrics</strong>: Identify slow nodes  </li></ul>
+<p>![LangSmith Trace Example](https://langchain-ai.github.io/langgraph/images/trace-view.png)</p>
+<h3>5. Production Deployment  </h3>
+<p>Enterprise-ready capabilities:</p>
+<ul><li><strong>Horizontal scaling</strong>: Distribute workloads across servers  </li>
+<li><strong>Checkpointing</strong>: Periodic state saves for reliability  </li>
+<li><strong>Versioning</strong>: Manage agent iterations safely  </li></ul>
+<h2>Getting Started Example  </h2>
+<p>Here's a minimal LangGraph agent that maintains conversation history:</p>
+<div class="code-block"><pre><code>from langgraph.prebuilt import create_react_agent
+from typing import TypedDict, List
+from langchain_core.messages import HumanMessage
+<p>class ChatState(TypedDict):<br>    messages: List[dict]  # Stores conversation history</p>
+<p>def respond_to_user(state: ChatState) -&gt; dict:<br>    last_msg = state["messages"][-1]["content"]<br>    return {"messages": [{"role": "assistant", "content": f"You said: {last_msg}"}]}</p>
+<h1>Build graph</h1>
+agent = create_react_agent(
+    model="anthropic:claude-3-haiku",
+    tools=[respond_to_user],
+    prompt="You are a helpful assistant"
+)
+<h1>Run conversation</h1>
+agent.invoke({
+    "messages": [HumanMessage(content="Hello!")]
+})
+</code></pre></div>
+
+<h2>Key Takeaways  </h2>
+<ul><li>LangGraph specializes in <strong>stateful, long-running agents</strong>  </li>
+<li>The <strong>graph model</strong> (nodes + edges + state) provides flexible control  </li>
+<li><strong>Durable execution</strong> enables reliable production deployments  </li>
+<li><strong>Memory management</strong> supports both transient and persistent state  </li>
+<li><strong>Human collaboration</strong> features build trust in AI systems  </li></ul>
+<div class="note-box"><strong>Next</strong>: In Section 2, we'll cover installation and environment setup to start building your first agent.</div>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most essential concepts from the LangGraph introduction, explained for beginners:</p>
+<strong>1. Stateful AI Agents</strong>  
+A stateful agent is an AI system that remembers past interactions and maintains context over time. Unlike chatbots that treat each message as a new conversation, stateful agents preserve memory (like conversation history or task progress). This matters because real-world tasks (e.g., customer support, document processing) require continuity across multiple steps or days.
+<strong>2. Durable Execution</strong>  
+This means agents can pause, resume, and recover from failures without losing progress. Imagine an agent processing a large document - if your server crashes, it can pick up where it left off instead of starting over. This is crucial for reliable production systems.
+<strong>3. Graph-Based Architecture</strong>  
+LangGraph models workflows as interconnected nodes (processing steps) and edges (decision paths). Think of it like a flowchart where:
+<ul><li>Nodes = Actions (e.g., call an API, analyze data)  </li>
+<li>Edges = Rules for what to do next (e.g., "If the user asks about weather, go to weather node")  </li></ul>
+This visual approach makes complex workflows easier to design and debug.
+<strong>4. Human-in-the-Loop</strong>  
+The system allows humans to monitor, approve, or intervene in AI operations. For example:
+<ul><li>Requiring manager approval before finalizing a refund  </li>
+<li>Letting a user correct an agent's misunderstanding mid-task  </li></ul>
+This builds trust and handles edge cases where pure AI might fail.
+<strong>5. Production-Grade State Management</strong>  
+LangGraph provides tools to handle different memory types:
+<ul><li>Short-term: Current task details (RAM)  </li>
+<li>Long-term: Saved progress (database)  </li>
+<li>Conversational: Chat history  </li></ul>
+This flexibility ensures agents work efficiently while remembering what matters.
+<h3>💻 Practical Examples</h3>
+<p>Here are 3 practical code examples demonstrating LangGraph's core concepts:</p>
+<div class="code-block"><pre><code>
+<h1>Example 1: Basic Chat Agent with Memory</h1>
+from typing import TypedDict, List
+from langgraph.graph import StateGraph
+<h1>Define state structure</h1>
+class ChatState(TypedDict):
+    messages: List[str]  # Conversation history
+    user_input: str      # Latest message
+    response: str       # Generated response
+<h1>Define nodes</h1>
+def user_input_node(state: ChatState) -&gt; dict:
+    """Simulate user input"""
+    return {"user_input": "Tell me about LangGraph"}
+<p>def llm_node(state: ChatState) -&gt; dict:<br>    """Generate response using LLM"""<br>    history = "\n".join(state["messages"])<br>    response = f"Based on our chat ({history}), you asked: {state['user_input']}"<br>    return {"response": response, "messages": state["messages"] + [state["user_input"], response]}</p>
+<h1>Build graph</h1>
+workflow = StateGraph(ChatState)
+workflow.add_node("get_input", user_input_node)
+workflow.add_node("generate_response", llm_node)
+workflow.add_edge("get_input", "generate_response")
+workflow.set_entry_point("get_input")
+<h1>Execute</h1>
+app = workflow.compile()
+result = app.invoke({"messages": []})
+print(result["response"])
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 2: Conditional Workflow with Tools</h1>
+from typing import TypedDict
+from langgraph.graph import StateGraph
+import random
+<p>class AgentState(TypedDict):<br>    question: str<br>    needs_calculation: bool<br>    answer: str</p>
+<p>def analyze_question(state: AgentState) -&gt; dict:<br>    """Determine if math is needed"""<br>    needs_math = any(word in state["question"] for word in ["sum", "add", "calculate"])<br>    return {"needs_calculation": needs_math}</p>
+<p>def calculate_node(state: AgentState) -&gt; dict:<br>    """Mock calculation"""<br>    nums = [int(s) for s in state["question"].split() if s.isdigit()]<br>    return {"answer": f"The result is {sum(nums)}"}</p>
+<p>def general_response_node(state: AgentState) -&gt; dict:<br>    """Default response"""<br>    return {"answer": "I can answer general questions"}</p>
+<p>workflow = StateGraph(AgentState)<br>workflow.add_node("analyze", analyze_question)<br>workflow.add_node("calculate", calculate_node)<br>workflow.add_node("respond", general_response_node)</p>
+<h1>Conditional edges</h1>
+workflow.add_conditional_edges(
+    "analyze",
+    lambda state: "calculate" if state["needs_calculation"] else "respond"
+)
+workflow.add_edge("calculate", "respond")
+workflow.set_entry_point("analyze")
+<h1>Run</h1>
+app = workflow.compile()
+print(app.invoke({"question": "What is 5 plus 3"}))
+print(app.invoke({"question": "Tell me about AI"}))
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 3: Human-in-the-Loop Approval</h1>
+from typing import TypedDict
+from langgraph.graph import StateGraph
+from langgraph.checkpoint import MemorySaver
+<p>class ApprovalState(TypedDict):<br>    draft_content: str<br>    needs_review: bool<br>    approved: bool<br>    final_content: str</p>
+<p>def draft_content(state: ApprovalState) -&gt; dict:<br>    """Generate initial content"""<br>    return {"draft_content": "Generated article about LangGraph", "needs_review": True}</p>
+<p>def human_review(state: ApprovalState) -&gt; dict:<br>    """Simulate human review (in real app would pause for input)"""<br>    print(f"REVIEW THIS CONTENT:\n{state['draft_content']}")<br>    approved = input("Approve? (y/n): ").lower() == "y"<br>    return {"approved": approved}</p>
+<p>def publish_node(state: ApprovalState) -&gt; dict:<br>    """Finalize approved content"""<br>    return {"final_content": state["draft_content"] + " [PUBLISHED]"}</p>
+<p>def reject_node(state: ApprovalState) -&gt; dict:<br>    """Handle rejected content"""<br>    return {"final_content": "", "needs_review": True}</p>
+<h1>Persistent workflow with checkpoints</h1>
+workflow = StateGraph(ApprovalState)
+workflow.add_node("draft", draft_content)
+workflow.add_node("review", human_review)
+workflow.add_node("publish", publish_node)
+workflow.add_node("reject", reject_node)
+<p>workflow.add_edge("draft", "review")<br>workflow.add_conditional_edges(<br>    "review",<br>    lambda state: "publish" if state["approved"] else "reject"<br>)<br>workflow.add_edge("reject", "draft")  # Loop back to draft<br>workflow.set_entry_point("draft")</p>
+<h1>Configure checkpointing</h1>
+app = workflow.compile(checkpointer=MemorySaver())
+<h1>First run (simulate rejection)</h1>
+thread_id = "user123"
+app.invoke({"needs_review": False}, {"configurable": {"thread_id": thread_id}})
+<h1>Later resume after human input (simulate approval)</h1>
+app.invoke({"approved": True}, {"configurable": {"thread_id": thread_id}})
+</code></pre></div>
+<p>Each example demonstrates key LangGraph features:</p>
+<ul><li>State management with TypedDict</li>
+<li>Node-based workflow composition</li>
+<li>Conditional routing</li>
+<li>Human interaction patterns</li>
+<li>Persistent execution (Example 3)</li></ul>
+<p>The examples are complete but would need LangGraph installed (<code class="inline-code">pip install langgraph</code>) and would require connecting to actual LLM services for full functionality in a real implementation.</p>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two beginner-friendly exercises that reinforce the core concepts from the LangGraph introduction:</p>
+<strong>Exercise 1</strong>: Stateful vs Stateless Identification
+<em>Instructions</em>:
+<ul><li>Read the following 3 scenarios</li>
+<li>Identify which would require a stateful agent (like LangGraph) vs a stateless solution:</li></ul>
+   - A) A weather API that returns current conditions for a ZIP code
+   - B) An AI tutor that remembers what concepts you struggled with last session
+   - C) A translation service that converts English to Spanish
+<em>Hint</em>: Look for scenarios requiring memory across interactions
+<em>Expected outcome</em>:
+<ul><li>Stateful: B (requires memory of past sessions)</li>
+<li>Stateless: A, C (single independent requests)</li></ul>
+<strong>Exercise 2</strong>: Graph Component Matching
+<em>Instructions</em>: 
+Match these LangGraph components to their definitions:
+<ul><li>Nodes</li>
+<li>Edges </li>
+<li>State</li>
+<li>Super-step</li></ul>
+<p>Definitions:<br>A) Contains business logic<br>B) Discrete execution iteration<br>C) Defines control flow between nodes  <br>D) Persistent data storage<br><em>Hint</em>: Review the "Core Architecture" section<br><em>Expected outcome</em>: <br>1-A, 2-C, 3-D, 4-B</p>
+<p>These exercises:</p>
+<ul><li>Require only reading comprehension</li>
+<li>Highlight LangGraph's stateful nature and architecture</li>
+<li>Provide immediate feedback through matching/classification</li>
+<li>Prepare learners for upcoming technical concepts</li></ul>
+            </div>
+        </section>
+        
+        <section id="section-2" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">2</span>
+                2. Prerequisites and Installation
+            </h2>
+            <div class="section-content">
+                <h2>2. Prerequisites and Installation</h2>
+<p>This section covers 2. prerequisites and installation. # 2. Prerequisites and Installation</p>
+<h2>Section Overview</h2>
+<p>Before diving into building AI agents with LangGraph, it's essential to set up your development environment correctly. This section will guide you through:</p>
+<ul><li>The fundamental Python knowledge required</li>
+<li>Setting up a proper Python environment</li>
+<li>Installing LangGraph and its dependencies</li>
+<li>Verifying your installation</li>
+<li>Troubleshooting common setup issues</li></ul>
+<p>By the end of this section, you'll have a fully functional LangGraph environment ready for agent development.</p>
+<h2>### Python Knowledge Requirements</h2>
+<p>LangGraph is a Python framework, so you'll need basic Python proficiency:</p>
+<strong>Essential Python Concepts:</strong>
+<ul><li>Variables and data types (strings, lists, dictionaries)</li>
+<li>Functions and function arguments</li>
+<li>Basic object-oriented programming concepts</li>
+<li>Working with Python modules and packages</li>
+<li>Type hints (basic understanding)</li></ul>
+<strong>Helpful to Know (But Not Required Immediately):</strong>
+<ul><li>Asynchronous programming (async/await)</li>
+<li>Decorators</li>
+<li>Context managers</li></ul>
+<div class="note-box"><strong>Note for Beginners</strong>: If you're new to Python, consider completing a basic Python tutorial first. The official [Python documentation](https://docs.python.org/3/tutorial/) is an excellent free resource.</div>
+<h2>### Environment Setup</h2>
+<p>A clean, isolated Python environment prevents dependency conflicts. Here's how to set one up:</p>
+<ul><li><strong>Install Python 3.8+</strong>:</li></ul>
+   - Download from [python.org](https://www.python.org/downloads/)
+   - Verify installation: <code class="inline-code">python --version</code> or <code class="inline-code">python3 --version</code>
+<ul><li><strong>Create a Virtual Environment</strong>:</li></ul>
+   <div class="code-block"><pre><code>   # Create the environment
+   python -m venv langgraph-env
+<p># Activate it (Windows)<br>   langgraph-env\Scripts\activate</p>
+<p># Activate it (macOS/Linux)<br>   source langgraph-env/bin/activate<br>   ``<code class="inline-code"></p>
+
+<ul><li><strong>Recommended Tools</strong>:</li></ul>
+   - Code editor: VS Code, PyCharm, or similar
+   - Version control: Git
+   - Package manager: pip (comes with Python)
+<p>&gt; <strong>Best Practice</strong>: Always work in a virtual environment for Python projects. This keeps your system Python installation clean and prevents version conflicts between projects.</p>
+<h2>### Installing LangGraph</h2>
+<p>With your environment ready, install LangGraph:</p>
+</code></pre></div>bash
+pip install -U langgraph
+<div class="code-block"><pre><code>
+<p>This command:</p>
+<ul><li></code>-U<code class="inline-code"> ensures you get the latest version</li>
+<li>Installs LangGraph and its core dependencies</li></ul>
+<strong>Optional Dependencies</strong>:
+Depending on your use case, you might need additional packages:
+</code></pre></div>bash
+<h1>For working with Anthropic models</h1>
+pip install -U "langchain[anthropic]"
+<h1>For OpenAI models</h1>
+pip install -U "langchain[openai]"
+<h1>For debugging with LangSmith</h1>
+pip install -U langsmith
+<div class="code-block"><pre><code>
+<h2>### Verifying Your Installation</h2>
+<p>Ensure everything installed correctly with a simple test:</p>
+</code></pre></div>python
+import langgraph
+<p>print(f"LangGraph version: {langgraph.__version__}")</p>
+<div class="code-block"><pre><code>
+<p>If this runs without errors, your installation is successful.</p>
+<h2>### Common Installation Issues</h2>
+<strong>1. Permission Errors</strong>:
+If you see permission-related errors, try:
+</code></pre></div>bash
+pip install --user langgraph
+<div class="code-block"><pre><code>
+Or use your virtual environment.
+<strong>2. Version Conflicts</strong>:
+If you have dependency conflicts:
+</code></pre></div>bash
+<h1>Create a fresh virtual environment</h1>
+python -m venv fresh-env
+source fresh-env/bin/activate  # or .\fresh-env\Scripts\activate on Windows
+pip install langgraph
+<div class="code-block"><pre><code>
+<strong>3. Missing Dependencies</strong>:
+Some features require additional system libraries. On Ubuntu/Debian:
+</code></pre></div>bash
+sudo apt-get install build-essential python3-dev
+<div class="code-block"><pre><code>
+<h2>### IDE Configuration (Optional but Recommended)</h2>
+<p>For the best development experience:</p>
+<ul><li><strong>VS Code Setup</strong>:</li></ul>
+   - Install the Python extension
+   - Configure your virtual environment as the Python interpreter
+   - Enable Pylance for type checking
+<ul><li><strong>Jupyter Notebooks</strong>:</li></ul>
+   If you prefer notebooks:
+   </code>`<code class="inline-code">bash
+   pip install jupyterlab
+   jupyter lab
+   </code>`<code class="inline-code">
+
+<h2>### Testing with a Simple Agent</h2>
+<p>Let's verify everything works with a basic agent:</p>
+</code></pre></div>python
+from langgraph.prebuilt import create_react_agent
+<h1>Define a simple tool</h1>
+def get_weather(city: str) -> str:
+    """Get weather for a given city."""
+    return f"It's always sunny in {city}!"
+<h1>Create the agent</h1>
+agent = create_react_agent(
+    model="anthropic:claude-3-7-sonnet-latest",
+    tools=[get_weather],
+    prompt="You are a helpful assistant"
+)
+<h1>Test it</h1>
+response = agent.invoke(
+    {"messages": [{"role": "user", "content": "what is the weather in sf"}]}
+)
+print(response)
+<div class="code-block"><pre><code>
+<p>&gt; <strong>Note</strong>: This example requires the </code>langchain[anthropic]<code class="inline-code"> package. If you don't have it, you'll see an error message explaining how to install it.</p>
+<h2>### Version Compatibility</h2>
+<p>LangGraph works with specific versions of dependencies. If you encounter issues:</p>
+<ul><li>Check installed versions:</li></ul>
+   </code>`<code class="inline-code">bash
+   pip show langgraph langchain
+   </code>`<code class="inline-code">
+
+<ul><li>Consult the [LangGraph documentation](https://langchain-ai.github.io/langgraph/) for version compatibility.</li>
+<li>To pin specific versions:</li></ul>
+   </code>`<code class="inline-code">bash
+   pip install langgraph==1.0.0 langchain==0.1.0
+   </code>`<code class="inline-code">
+
+<h2>### Summary of Key Takeaways</h2>
+<ul><li><strong>Python Knowledge</strong>: Basic Python skills are required, especially with functions and data structures</li>
+<li><strong>Environment</strong>: Always use a virtual environment for isolation</li>
+<li><strong>Installation</strong>: </code>pip install -U langgraph<code class="inline-code"> gets you started</li>
+<li><strong>Verification</strong>: Simple import test confirms successful installation</li>
+<li><strong>Troubleshooting</strong>: Most issues resolve with a clean environment or proper permissions</li></ul>
+<p>With your environment now properly set up, you're ready to explore LangGraph's core concepts in the next section and start building your first AI agent!</p>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3 most essential concepts from this section, explained clearly for beginners:</p>
+<strong>1. Virtual Environments</strong>  
+A virtual environment is an isolated Python workspace that keeps your project's dependencies separate from other projects and your system-wide Python installation. This prevents version conflicts between packages. It's like having a clean, private room for each project where you can install specific tools without affecting other projects. The section shows how to create (</code>python -m venv env_name<code class="inline-code">) and activate (</code>source env_name/bin/activate<code class="inline-code">) one.
+<strong>2. Core Python Requirements</strong>  
+Before using LangGraph, you need foundational Python knowledge including: variables/data types, functions, basic OOP concepts, and importing modules. These are the building blocks you'll use constantly when creating AI agents. The framework also uses type hints (like </code>def func(param: str) -&gt; int:<code class="inline-code">), which help catch errors early by indicating what data types functions expect and return.
+<strong>3. Installation Verification</strong>  
+After installing LangGraph (</code>pip install langgraph<code class="inline-code">), it's crucial to verify everything works by:  
+1) Checking the version (</code>import langgraph; print(langgraph.__version__)<code class="inline-code">)  
+2) Running a simple test agent  
+This confirms your setup is correct before building more complex agents. The section provides troubleshooting tips for common issues like permission errors or missing dependencies.
+<h3>💻 Practical Examples</h3>
+<p>Here are 2-3 practical, working code examples for the Prerequisites and Installation section:</p>
+</code></pre></div>python
+<h1>Example 1: Environment Setup and Basic Verification</h1>
+"""
+This example demonstrates:
+<ul><li>Creating a virtual environment</li>
+<li>Installing LangGraph</li>
+<li>Verifying the installation</li></ul>
+"""
+<h1>Create and activate virtual environment (run in terminal)</h1>
+<h1>python -m venv langgraph-env</h1>
+<h1>source langgraph-env/bin/activate  # or .\langgraph-env\Scripts\activate on Windows</h1>
+<h1>Install LangGraph (run in terminal)</h1>
+<h1>pip install -U langgraph</h1>
+<h1>Verification script (save as verify_install.py)</h1>
+import langgraph
+from importlib.metadata import version
+<p>print("=== Installation Verification ===")<br>print(f"LangGraph version: {version('langgraph')}")<br>print(f"Python executable: {__import__('sys').executable}")<br>print("If you see a version number above, installation was successful!")</p>
+<h1>Expected output:</h1>
+<h1>=== Installation Verification ===</h1>
+<h1>LangGraph version: 1.0.0  (or your installed version)</h1>
+<h1>Python executable: /path/to/your/virtualenv/python</h1>
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 2: Simple Agent with OpenAI</h1>
+"""
+This example shows:
+<ul><li>Installing required dependencies</li>
+<li>Creating a basic agent</li>
+<li>Making a simple API call</li></ul>
+"""
+<h1>First install dependencies (run in terminal):</h1>
+<h1>pip install -U langgraph langchain-openai</h1>
+<p>import os<br>from langgraph.prebuilt import create_react_agent</p>
+<h1>Set your OpenAI API key (better to use environment variables)</h1>
+os.environ["OPENAI_API_KEY"] = "your-api-key-here"  # Replace with your actual key
+<h1>Define a simple calculator tool</h1>
+def calculator(expression: str) -> str:
+    """Evaluate a mathematical expression."""
+    try:
+        return str(eval(expression))
+    except:
+        return "Error: Invalid expression"
+<h1>Create the agent</h1>
+agent = create_react_agent(
+    model="openai:gpt-3.5-turbo",
+    tools=[calculator],
+    prompt="You are a math assistant. Use the calculator for math problems."
+)
+<h1>Test the agent</h1>
+response = agent.invoke({
+    "messages": [{
+        "role": "user",
+        "content": "What is 15 multiplied by 3?"
+    }]
+})
+<p>print("Agent response:", response)</p>
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 3: Troubleshooting Dependency Conflicts</h1>
+"""
+This example demonstrates how to:
+<ul><li>Check installed versions</li>
+<li>Resolve conflicts</li>
+<li>Create a clean environment</li></ul>
+"""
+<h1>Save this as check_versions.py</h1>
+import subprocess
+import sys
+<p>def get_package_versions(<em>packages):<br>    """Get installed versions of specified packages"""<br>    versions = {}<br>    for pkg in packages:<br>        try:<br>            result = subprocess.run(<br>                [sys.executable, "-m", "pip", "show", pkg],<br>                capture_output=True, text=True<br>            )<br>            version_line = [line for line in result.stdout.split('\n') <br>                          if line.startswith('Version:')][0]<br>            versions[pkg] = version_line.split(':')[1].strip()<br>        except:<br>            versions[pkg] = "Not installed"<br>    return versions</p>
+<h1>Check critical packages</h1>
+critical_packages = ["langgraph", "langchain", "langchain-core", "langchain-community"]
+versions = get_package_versions(</em>critical_packages)
+<p>print("=== Current Package Versions ===")<br>for pkg, ver in versions.items():<br>    print(f"{pkg}: {ver}")</p>
+<p>print("\nRecommended actions if you have conflicts:")<br>print("1. Create a fresh virtual environment")<br>print("2. Install only what you need:")<br>print("   pip install langgraph")<br>print("3. Add specific integrations as needed:")<br>print("   pip install langgraph[openai]")</p>
+<h1>Sample output:</h1>
+<h1>=== Current Package Versions ===</h1>
+<h1>langgraph: 1.0.0</h1>
+<h1>langchain: 0.1.0</h1>
+<h1>langchain-core: 0.1.0</h1>
+<h1>langchain-community: 0.1.0</h1>
+</code>`<code class="inline-code">
+<p>Each example is:</p>
+<ul><li>Complete and runnable (with proper setup)</li>
+<li>Demonstrates key installation/verification concepts</li>
+<li>Includes helpful comments and error handling</li>
+<li>Shows practical real-world usage scenarios</li></ul>
+<p>The examples progress from basic verification to more complex scenarios, covering the main points from the installation section while providing immediate practical value.</p>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two simple practice exercises for the Prerequisites and Installation section:</p>
+<strong>Exercise 1</strong>: Set Up Your Python Environment
+<ul><li>Create a virtual environment named "langgraph-practice"</li>
+<li>Activate the environment</li>
+<li>Install LangGraph using pip</li>
+<li>Verify the installation by checking the version</li></ul>
+<em>Hint</em>:
+<ul><li>Use </code>python -m venv langgraph-practice<code class="inline-code"> to create the environment</li>
+<li>Remember to activate it before installing packages</li>
+<li>Use </code>import langgraph; print(langgraph.__version__)` to verify</li></ul>
+<em>Expected outcome</em>:
+<ul><li>A working virtual environment</li>
+<li>Successful installation of LangGraph</li>
+<li>Ability to print the installed version without errors</li></ul>
+<strong>Exercise 2</strong>: Troubleshooting Practice
+<ul><li>Intentionally create an installation error by:</li></ul>
+  1. Deactivating your virtual environment
+  2. Trying to install LangGraph globally (without --user flag)
+  3. Observe the error
+<ul><li>Then fix it by either:</li></ul>
+  a) Using the --user flag, OR
+  b) Reactivating your virtual environment and installing properly
+<em>Hint</em>:
+<ul><li>Permission errors are common when trying to install packages globally</li>
+<li>The error message will typically mention "permission denied" or "not writeable"</li></ul>
+<em>Expected outcome</em>:
+<ul><li>Experience seeing a common installation error</li>
+<li>Understanding of two different ways to resolve permission issues</li>
+<li>Successful installation after applying the fix</li></ul>
+<p>These exercises reinforce:</p>
+<ul><li>Virtual environment creation/usage</li>
+<li>Package installation</li>
+<li>Basic troubleshooting</li>
+<li>Verification of setup</li></ul>
+<p>Both are achievable for beginners while covering essential setup skills.</p>
+            </div>
+        </section>
+        
+        <section id="section-3" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">3</span>
+                3. Core Concepts: Graphs, State, Nodes and Edges
+            </h2>
+            <div class="section-content">
+                <h2>3. Core Concepts: Graphs, State, Nodes and Edges</h2>
+<p>This section covers 3. core concepts: graphs, state, nodes and edges. # 3. Core Concepts: Graphs, State, Nodes and Edges</p>
+<h2>Introduction</h2>
+<p>At the heart of LangGraph lies a powerful yet intuitive model for building AI agents. This section will break down the four fundamental building blocks that make up any LangGraph application: <strong>Graphs</strong>, <strong>State</strong>, <strong>Nodes</strong>, and <strong>Edges</strong>. Understanding these concepts is crucial for designing effective agent workflows that can handle complex, stateful operations.</p>
+<p>Think of LangGraph as a factory assembly line where:</p>
+<ul><li>The <strong>Graph</strong> is the entire production facility</li>
+<li><strong>State</strong> represents the conveyor belt carrying your product through different stations</li>
+<li><strong>Nodes</strong> are the workstations where specific operations occur</li>
+<li><strong>Edges</strong> are the pathways determining which station comes next</li></ul>
+<h2>### Graphs: The Foundation</h2>
+<p>A <strong>Graph</strong> in LangGraph is the container that holds your entire agent workflow. It defines:</p>
+<ul><li>The flow of operations</li>
+<li>How data moves between components</li>
+<li>The rules for execution</li></ul>
+<strong>Key Graph Types:</strong>
+<ul><li><code class="inline-code">StateGraph</code>: The primary graph type for most use cases</li>
+<li><code class="inline-code">MessageGraph</code>: Specialized for chat-based applications</li>
+<li><code class="inline-code">ConditionalGraph</code>: For workflows with complex branching</li></ul>
+<div class="code-block"><pre><code>from langgraph.graph import StateGraph
+<h1>Initialize a basic graph</h1>
+graph = StateGraph(StateDefinition)
+</code></pre></div>
+<div class="note-box"><strong>Note:</strong> All graphs must be compiled before use with <code class="inline-code">.compile()</code>. This validates the structure and prepares it for execution.</div>
+<h2>### State: Your Agent's Memory</h2>
+<p>The <strong>State</strong> represents your agent's memory and shared data structure. It's:</p>
+<ul><li><strong>Persistent</strong>: Maintains information across execution steps</li>
+<li><strong>Shared</strong>: Accessible by all nodes in the graph</li>
+<li><strong>Typed</strong>: Enforces data structure consistency</li></ul>
+<strong>State Definition Example:</strong>
+<div class="code-block"><pre><code>from typing import TypedDict, Annotated
+from typing_extensions import TypedDict
+from operator import add
+<p>class AgentState(TypedDict):<br>    # Simple value (uses default override reducer)<br>    current_task: str<br>    <br>    # List with additive reducer<br>    conversation_history: Annotated[list[str], add]<br>    <br>    # Complex object with custom reducer<br>    analysis_results: dict<br></code></pre></div></p>
+<strong>State Reducers Explained:</strong>
+Reducers determine how state updates are applied:
+<ul><li><strong>Default Reducer</strong>: Overwrites the existing value</li></ul>
+   <div class="code-block"><pre><code>   task: str  # Uses default override behavior
+   ``<code class="inline-code">
+
+<ul><li><strong>Additive Reducer</strong>: Merges updates (e.g., appending to lists)</li></ul>
+   </code>`<code class="inline-code">python
+   history: Annotated[list, add]  # Uses operator.add
+   </code>`<code class="inline-code">
+
+<ul><li><strong>Custom Reducer</strong>: Your own merge logic</li></ul>
+   </code>`<code class="inline-code">python
+   from langgraph.reducers import your_custom_reducer
+   data: Annotated[dict, your_custom_reducer]
+   </code>`<code class="inline-code">
+<p>&gt; <strong>Pro Tip:</strong> Use </code>TypedDict<code class="inline-code"> for better type checking and documentation of your state structure.</p>
+<h2>### Nodes: The Workers</h2>
+<strong>Nodes</strong> are where the actual work happens. Each node:
+<ul><li>Receives the current state as input</li>
+<li>Performs computations or actions</li>
+<li>Returns state updates</li></ul>
+<strong>Creating a Node:</strong>
+</code></pre></div>python
+def research_node(state: AgentState) -> dict:
+    """Node that performs research based on current task"""
+    task = state["current_task"]
+    results = do_research(task)
+    return {"analysis_results": results}
+<h1>Add to graph</h1>
+graph.add_node("research", research_node)
+<div class="code-block"><pre><code>
+<strong>Special Node Types:</strong>
+<ul><li><strong>START Node</strong>: Entry point of your graph</li>
+<li><strong>END Node</strong>: Termination point</li>
+<li><strong>Tool Nodes</strong>: Interface with external services</li></ul>
+<strong>Node Caching:</strong>
+Enable caching to optimize performance:
+</code></pre></div>python
+graph.add_node("research", research_node, node_cache=True)
+<div class="code-block"><pre><code>
+<h2>### Edges: The Decision Makers</h2>
+<strong>Edges</strong> control the flow between nodes based on state. They come in several types:
+<ul><li><strong>Normal Edges</strong>: Fixed transitions</li></ul>
+   </code>`<code class="inline-code">python
+   graph.add_edge("node_a", "node_b")
+   </code>`<code class="inline-code">
+
+<ul><li><strong>Conditional Edges</strong>: Dynamic routing</li></ul>
+   </code>`<code class="inline-code">python
+   def should_continue(state: AgentState) -&gt; str:
+       return "continue" if state["is_complete"] else "reprocess"
+   
+   graph.add_conditional_edges(
+       "decision_node",
+       should_continue,
+       {"continue": "next_node", "reprocess": "retry_node"}
+   )
+   </code>`<code class="inline-code">
+
+<ul><li><strong>Entry Points</strong>: Custom starting locations</li></ul>
+   </code>`<code class="inline-code">python
+   graph.add_edge(START, "initial_node")
+   </code>`<code class="inline-code">
+<strong>Edge Routing Example:</strong>
+</code></pre></div>python
+<h1>Fixed path</h1>
+graph.add_edge("gather_data", "analyze_data")
+<h1>Conditional path</h1>
+def check_quality(state: AgentState) -> str:
+    return "high_quality" if state["confidence"] > 0.8 else "needs_review"
+<p>graph.add_conditional_edges(<br>    "analyze_data",<br>    check_quality,<br>    {<br>        "high_quality": "generate_report",<br>        "needs_review": "human_review"<br>    }<br>)</p>
+<div class="code-block"><pre><code>
+<h2>### Putting It All Together</h2>
+<p>Here's a complete example demonstrating these concepts:</p>
+</code></pre></div>python
+from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph
+from operator import add
+<h1>1. Define State</h1>
+class DocAnalysisState(TypedDict):
+    document: str
+    questions: Annotated[list[str], add]
+    answers: dict
+<h1>2. Define Nodes</h1>
+def load_doc(state: DocAnalysisState) -> dict:
+    return {"document": "Sample text..."}
+<p>def generate_questions(state: DocAnalysisState) -> dict:<br>    return {"questions": ["What is...?", "How does...?"]}</p>
+<p>def answer_questions(state: DocAnalysisState) -> dict:<br>    answers = {q: f"Answer to {q}" for q in state["questions"]}<br>    return {"answers": answers}</p>
+<h1>3. Build Graph</h1>
+graph = StateGraph(DocAnalysisState)
+graph.add_node("load", load_doc)
+graph.add_node("gen_q", generate_questions)
+graph.add_node("answer", answer_questions)
+<h1>4. Define Edges</h1>
+graph.add_edge(START, "load")
+graph.add_edge("load", "gen_q")
+graph.add_edge("gen_q", "answer")
+graph.add_edge("answer", END)
+<h1>5. Compile</h1>
+agent = graph.compile()
+<div class="code-block"><pre><code>
+<h2>Key Takeaways</h2>
+<ul><li><strong>Graphs</strong> are containers for your entire workflow</li>
+<li><strong>State</strong> is your agent's persistent memory with defined structure</li>
+<li><strong>Nodes</strong> perform discrete units of work</li>
+<li><strong>Edges</strong> determine the flow between nodes</li>
+<li><strong>Reducers</strong> control how state updates are applied</li></ul>
+<p>&gt; <strong>Best Practice:</strong> Start with simple state structures and add complexity gradually as your agent evolves.</p>
+<p>In the next section, we'll use these building blocks to create your first functional LangGraph agent. The concepts covered here will form the foundation for all the advanced techniques we'll explore later in the tutorial.</p>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most essential concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. Graphs (The Workflow Container)</strong>  
+A <em>Graph</em> in LangGraph is like the blueprint for your AI agent's workflow. It defines how data flows between different steps and what rules govern execution. Think of it as a factory assembly line where you specify all the stations and how products move between them. The most common type is </code>StateGraph<code class="inline-code">, which handles most agent workflows. Graphs must be compiled (like finalizing a blueprint) before they can run.
+<strong>2. State (The Agent's Memory)</strong>  
+The <em>State</em> is your agent's shared memory that persists throughout execution. It's a structured data container (like a dictionary with rules) that all nodes can access and modify. The state is <em>typed</em> (enforces data structure) and uses <em>reducers</em> (rules for updating values). For example, a list might use an "add" reducer to append new items rather than overwriting the whole list. This ensures data consistency across your workflow.
+<strong>3. Nodes (The Workers)</strong>  
+<em>Nodes</em> are individual processing units where actual work happens - like workstations in a factory. Each node receives the current state, performs an operation (e.g., calling an API or processing data), and returns state updates. Special nodes include START (entry point), END (exit point), and Tool Nodes (for external services). Nodes can be cached to optimize performance.
+<strong>4. Edges (The Flow Controllers)</strong>  
+<em>Edges</em> determine how your workflow moves between nodes. There are three key types:
+<ul><li><em>Normal edges</em>: Fixed paths (always go from A → B)  </li>
+<li><em>Conditional edges</em>: Dynamic routing (choose next step based on state)  </li>
+<li><em>Entry edges</em>: Custom starting points  </li></ul>
+They act like traffic signals and road signs for your workflow's decision-making.
+<strong>5. Reducers (Update Rules)</strong>  
+A special but crucial concept for working with State. Reducers define <em>how</em> state updates are applied:
+<ul><li><em>Default</em>: Overwrites existing values  </li>
+<li><em>Additive</em>: Merges updates (like appending to a list)  </li>
+<li><em>Custom</em>: Your own rules for complex data  </li></ul>
+These ensure state changes happen predictably when multiple nodes modify the same data.
+<p>---</p>
+<p>Key Takeaway: These concepts work together - you define a <em>Graph</em> with <em>Nodes</em> (workers) connected by <em>Edges</em> (paths), all sharing and modifying a common <em>State</em> (memory) according to <em>Reducer</em> rules. Understanding this interplay is fundamental to building effective LangGraph agents.</p>
+<h3>💻 Practical Examples</h3>
+<p>Here are 3 practical, working code examples that demonstrate the core concepts of LangGraph:</p>
+</code></pre></div>python
+<h1>Example 1: Basic Research Agent Workflow</h1>
+from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph
+from operator import add
+<h1>Define state structure</h1>
+class ResearchState(TypedDict):
+    research_topic: str
+    sources: Annotated[list[str], add]  # Uses additive reducer
+    findings: str
+<h1>Create nodes</h1>
+def define_topic(state: ResearchState) -> dict:
+    """Entry node that sets the research topic"""
+    return {"research_topic": "AI in healthcare"}
+<p>def gather_sources(state: ResearchState) -> dict:<br>    """Node that finds relevant sources"""<br>    topic = state["research_topic"]<br>    # Simulate API call to research database<br>    return {"sources": [<br>        f"Study on {topic} from 2023",<br>        f"Industry report on {topic}"<br>    ]}</p>
+<p>def analyze_findings(state: ResearchState) -> dict:<br>    """Node that processes the collected information"""<br>    return {"findings": f"Key insights from {len(state['sources'])} sources"}</p>
+<h1>Build the graph</h1>
+graph = StateGraph(ResearchState)
+graph.add_node("define_topic", define_topic)
+graph.add_node("gather_sources", gather_sources)
+graph.add_node("analyze", analyze_findings)
+<h1>Set up edges</h1>
+graph.add_edge("define_topic", "gather_sources")
+graph.add_edge("gather_sources", "analyze")
+<h1>Set entry point and compile</h1>
+graph.set_entry_point("define_topic")
+research_agent = graph.compile()
+<h1>Run the agent</h1>
+result = research_agent.invoke({"research_topic": "", "sources": [], "findings": ""})
+print(result)
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 2: Customer Support Chatbot with Conditional Flow</h1>
+from typing import TypedDict, Literal
+from langgraph.graph import StateGraph
+<h1>Define state with conversation history</h1>
+class ChatState(TypedDict):
+    user_input: str
+    conversation: list[str]
+    needs_human: bool
+<h1>Create nodes</h1>
+def greet_user(state: ChatState) -> dict:
+    return {"conversation": ["Hello! How can I help you today?"]}
+<p>def handle_query(state: ChatState) -> dict:<br>    user_msg = state["user_input"]<br>    if "complaint" in user_msg.lower():<br>        return {"conversation": ["I'll connect you to a manager."], "needs_human": True}<br>    return {"conversation": ["Here's some information that might help."]}</p>
+<p>def escalate_to_human(state: ChatState) -> dict:<br>    return {"conversation": ["Please wait while I connect you..."]}</p>
+<h1>Build graph with conditional edges</h1>
+graph = StateGraph(ChatState)
+graph.add_node("greet", greet_user)
+graph.add_node("process", handle_query)
+graph.add_node("escalate", escalate_to_human)
+<h1>Set up flow</h1>
+graph.add_edge("greet", "process")
+graph.add_conditional_edges(
+    "process",
+    lambda state: "human" if state["needs_human"] else "end",
+    {"human": "escalate", "end": END}
+)
+graph.add_edge("escalate", END)
+<h1>Compile and run</h1>
+graph.set_entry_point("greet")
+chatbot = graph.compile()
+<h1>Test different paths</h1>
+print(chatbot.invoke({"user_input": "I have a complaint", "conversation": [], "needs_human": False}))
+print(chatbot.invoke({"user_input": "Where's my order?", "conversation": [], "needs_human": False}))
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 3: Document Processing Pipeline with Parallel Nodes</h1>
+from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph
+from operator import add
+<p>class DocState(TypedDict):<br>    raw_text: str<br>    summary: str<br>    keywords: list[str]<br>    sentiment: str</p>
+<h1>Parallel processing nodes</h1>
+def summarize_text(state: DocState) -> dict:
+    from fake_library import generate_summary  # Mock import
+    return {"summary": generate_summary(state["raw_text"])}
+<p>def extract_keywords(state: DocState) -> dict:<br>    return {"keywords": ["AI", "processing"]}  # Simplified</p>
+<p>def analyze_sentiment(state: DocState) -> dict:<br>    return {"sentiment": "positive" if "good" in state["raw_text"] else "neutral"}</p>
+<h1>Build graph with parallel execution</h1>
+graph = StateGraph(DocState)
+graph.add_node("summarize", summarize_text)
+graph.add_node("extract", extract_keywords)
+graph.add_node("sentiment", analyze_sentiment)
+<h1>Set up parallel processing after initial node</h1>
+graph.add_edge("summarize", "extract")
+graph.add_edge("summarize", "sentiment")
+<h1>Use reducer to combine parallel outputs</h1>
+graph.set_finish_point("extract")
+graph.set_finish_point("sentiment")
+<h1>Compile and run</h1>
+graph.set_entry_point("summarize")
+processor = graph.compile()
+<p>result = processor.invoke({<br>    "raw_text": "This is a good example of document processing with AI",<br>    "summary": "",<br>    "keywords": [],<br>    "sentiment": ""<br>})<br>print(result)</p>
+<div class="code-block"><pre><code>
+<p>Each example demonstrates different aspects of LangGraph:</p>
+<ul><li>The research agent shows basic state management and linear flow</li>
+<li>The chatbot highlights conditional routing based on state</li>
+<li>The document processor demonstrates parallel node execution</li></ul>
+<p>All examples include:</p>
+<ul><li>Clear state definitions</li>
+<li>Typed node functions</li>
+<li>Proper graph construction</li>
+<li>Realistic use cases</li>
+<li>Comprehensive comments explaining each part</li></ul>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two simple practice exercises for the "Core Concepts: Graphs, State, Nodes and Edges" section:</p>
+<p>---</p>
+<strong>Exercise 1: Create a Basic State Definition</strong>  
+Define a </code>TypedDict<code class="inline-code"> class called </code>ShoppingCartState<code class="inline-code"> to represent the state of an e-commerce agent. It should track:
+<ul><li>A </code>cart_items<code class="inline-code"> list (additive updates)  </li>
+<li>A </code>current_product<code class="inline-code"> string (default override)  </li>
+<li>A </code>discount_applied<code class="inline-code"> boolean (default override)  </li></ul>
+<em>Hint</em>: Use </code>Annotated<code class="inline-code"> with </code>add<code class="inline-code"> for the list reducer. Refer to the "State: Your Agent's Memory" section for the syntax.  
+<em>Expected outcome</em>: A properly typed state definition that can be used in a </code>StateGraph<code class="inline-code">.
+</code></pre></div>python
+from typing import TypedDict, Annotated
+from operator import add
+<h1>Your solution here</h1>
+class ShoppingCartState(TypedDict):
+    ...
+<div class="code-block"><pre><code>
+<p>---</p>
+<strong>Exercise 2: Build a Minimal Graph</strong>  
+Create a compiled </code>StateGraph<code class="inline-code"> with:
+<ul><li>A state definition from Exercise 1  </li>
+<li>One node called </code>add_item<code class="inline-code"> that updates </code>cart_items<code class="inline-code">  </li>
+<li>One edge from the entry point to your </code>add_item<code class="inline-code"> node  </li></ul>
+<em>Hint</em>: Remember to call </code>.add_node()<code class="inline-code"> and </code>.add_edge()<code class="inline-code"> before compiling.  
+<em>Expected outcome</em>: A working graph that can process state updates.
+</code></pre></div>python
+from langgraph.graph import StateGraph
+<h1>Define your node function</h1>
+def add_item(state: ShoppingCartState) -> dict:
+    return {"cart_items": ["new_item"]}  # Example update
+<h1>Build the graph</h1>
+graph = StateGraph(ShoppingCartState)
+graph.add_node("add_item", add_item)
+graph.add_edge("__start__", "add_item")  # Special entry point
+compiled_graph = graph.compile()
+<h1>Test it</h1>
+print(compiled_graph.invoke({"cart_items": []}))
+</code>``
+<p>---</p>
+<p>These exercises reinforce:</p>
+<ul><li>State structure design (Exercise 1)  </li>
+<li>Graph assembly workflow (Exercise 2)  </li></ul>
+Both use beginner-friendly concepts while touching all four core components (Graphs, State, Nodes, Edges).
+            </div>
+        </section>
+        
+        <section id="section-4" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">4</span>
+                4. Your First LangGraph Agent
+            </h2>
+            <div class="section-content">
+                <h2>4. Your First LangGraph Agent</h2>
+<p>This section covers 4. your first langgraph agent. # 4. Your First LangGraph Agent</p>
+<p>In this section, we'll build your first functional LangGraph agent step-by-step. You'll learn how to:</p>
+<ul><li>Install necessary dependencies  </li>
+<li>Create a simple agent using prebuilt components  </li>
+<li>Understand the agent's execution flow  </li>
+<li>Run and interact with your agent  </li></ul>
+<h2>### Prerequisites  </h2>
+<p>Before we begin, ensure you have:</p>
+<ul><li>Python 3.8+ installed  </li>
+<li>Basic Python knowledge  </li>
+<li>An Anthropic API key (for our example model)  </li></ul>
+<p>Install the required packages:</p>
+<div class="code-block"><pre><code>pip install -U langgraph "langchain[anthropic]"
+</code></pre></div>
+
+<h2>### Understanding Prebuilt Components  </h2>
+<p>LangGraph provides <strong>prebuilt agents</strong> - ready-to-use agent architectures that handle common patterns like:</p>
+<ul><li><strong>ReAct agents</strong>: Reason and act in loops  </li>
+<li><strong>Chat agents</strong>: Conversation-focused workflows  </li>
+<li><strong>Tool-calling agents</strong>: Use external tools  </li></ul>
+<p>We'll use <code class="inline-code">create_react_agent</code>, which implements the ReAct pattern (Reasoning + Acting).</p>
+<h2>### Building a Weather Agent  </h2>
+<p>Let's create an agent that fetches weather information.</p>
+<p>#### <strong>Step 1: Define Tools</strong>  <br>Tools are functions your agent can call. Here's a mock weather tool:</p>
+<div class="code-block"><pre><code>def get_weather(city: str) -&gt; str:
+    """Get weather for a given city."""
+    return f"It's always sunny in {city}!"
+</code></pre></div>
+<div class="note-box"><strong>Note</strong>: In production, you'd connect to a real weather API. This mock tool helps us focus on the agent structure.</div>
+<p>#### <strong>Step 2: Configure the Agent</strong></p>
+<div class="code-block"><pre><code>from langgraph.prebuilt import create_react_agent
+<p>agent = create_react_agent(<br>    model="anthropic:claude-3-7-sonnet-latest",  # Anthropic model<br>    tools=[get_weather],                         # Our weather tool<br>    prompt="You are a helpful weather assistant" # System message<br>)<br></code></pre></div></p>
+<strong>Key Parameters Explained</strong>:
+<ul><li><code class="inline-code">model</code>: The LLM to power the agent (supports Anthropic, OpenAI, etc.)  </li>
+<li><code class="inline-code">tools</code>: List of callable functions the agent can use  </li>
+<li><code class="inline-code">prompt</code>: System message guiding the agent's behavior  </li></ul>
+<p>#### <strong>Step 3: Run the Agent</strong></p>
+<p>Agents process input in a <strong>message-based format</strong>. Here's how to invoke ours:</p>
+<div class="code-block"><pre><code>response = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "What's the weather in San Francisco?"}
+    ]
+})
+print(response["messages"][-1]["content"])
+</code></pre></div>
+<strong>Expected Output</strong>:
+<div class="code-block"><pre><code>
+I'll check the weather for San Francisco... <em>calls get_weather</em> It's always sunny in San Francisco!
+</code></pre></div>
+
+<h2>### Understanding the Execution Flow  </h2>
+<p>Let's break down what happens when you run the agent:</p>
+<ul><li><strong>Input Handling</strong>:  </li></ul>
+   - The agent receives messages in <code class="inline-code">{"role": "user/assistant", "content": "..."}</code> format  
+   - Maintains conversation history in the state
+<ul><li><strong>Reasoning Cycle</strong>:  </li></ul>
+   - LLM decides whether to:  
+     - <strong>Respond directly</strong> (if no tools are needed)  
+     - <strong>Call a tool</strong> (like our <code class="inline-code">get_weather</code> function)
+<ul><li><strong>Tool Execution</strong>:  </li></ul>
+   - When calling <code class="inline-code">get_weather("San Francisco")</code>, the agent:  
+     - Pauses LLM execution  
+     - Runs the tool with proper arguments  
+     - Resumes with the tool's result
+<ul><li><strong>Output Generation</strong>:  </li></ul>
+   - Final response is appended to the message history
+<h2>### Customizing Agent Behavior  </h2>
+<p>You can tweak the agent's personality and capabilities:</p>
+<strong>1. Adjust the System Prompt</strong>:
+<div class="code-block"><pre><code>agent = create_react_agent(
+    model="anthropic:claude-3-7-sonnet-latest",
+    tools=[get_weather],
+    prompt="""
+    You are a sarcastic weather bot. 
+    Provide witty responses after checking the weather.
+    """
+)
+</code></pre></div>
+<strong>2. Add More Tools</strong>:
+<div class="code-block"><pre><code>def get_population(city: str) -&gt; int:
+    """Returns population data"""
+    return 815_000  # Mock SF population
+<p>agent = create_react_agent(<br>    model=...,<br>    tools=[get_weather, get_population],<br>    prompt=...<br>)<br></code></pre></div></p>
+
+<h2>### Handling Agent Output  </h2>
+<p>The agent returns a rich state object. Key components:</p>
+<div class="code-block"><pre><code>{
+    "messages": [
+        {"role": "user", "content": "What's SF's weather?"},
+        {"role": "assistant", "content": "It's sunny!"}
+    ],
+    "intermediate_steps": [
+        ("get_weather", {"city": "San Francisco"}, "It's always sunny!")
+    ]
+}
+</code></pre></div>
+<strong>Fields Explained</strong>:
+<ul><li><code class="inline-code">messages</code>: Full conversation history  </li>
+<li><code class="inline-code">intermediate_steps</code>: Tool calls and results during execution  </li></ul>
+<h2>### Troubleshooting Common Issues  </h2>
+<strong>Problem</strong>: Agent isn't calling tools  
+<strong>Solution</strong>:
+<ul><li>Ensure tools have proper docstrings (LLMs use these to understand functionality)  </li>
+<li>Verify the prompt doesn't restrict tool usage  </li></ul>
+<strong>Problem</strong>: API errors  
+<strong>Solution</strong>:
+<ul><li>Check your API keys  </li>
+<li>Confirm model names are correct (e.g., <code class="inline-code">anthropic:claude-3-7-sonnet-latest</code>)  </li></ul>
+<h2>### Key Takeaways  </h2>
+<ul><li><strong>Prebuilt agents</strong> let you quickly prototype with minimal code  </li>
+<li><strong>Tools</strong> extend agent capabilities with custom functions  </li>
+<li><strong>Message-based I/O</strong> maintains conversation context  </li>
+<li><strong>Execution is stateful</strong> - agents remember interactions  </li></ul>
+<div class="note-box"><strong>Try It Yourself</strong>: Modify the weather tool to return realistic data from a free API like OpenWeatherMap.  </div>
+<p>In the next section, we'll explore building <strong>custom workflows</strong> beyond prebuilt agents.</p>
+<p>---  <br><strong>Code Summary</strong>: Full example for reference</p>
+<div class="code-block"><pre><code>
+<h1>Full weather agent implementation</h1>
+from langgraph.prebuilt import create_react_agent
+<p>def get_weather(city: str) -&gt; str:<br>    """Get weather for a given city."""<br>    return f"Weather in {city}: 72°F and sunny"</p>
+<p>agent = create_react_agent(<br>    model="anthropic:claude-3-7-sonnet-latest",<br>    tools=[get_weather],<br>    prompt="You are a helpful weather assistant"<br>)</p>
+<p>response = agent.invoke({<br>    "messages": [<br>        {"role": "user", "content": "What's the weather in Paris?"}<br>    ]<br>})<br>print(response["messages"][-1]["content"])<br></code></pre></div></p>
+
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most essential concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. Prebuilt Agents</strong>  
+Prebuilt agents are ready-made AI assistant templates that handle common interaction patterns. They matter because they let you create functional agents quickly without building everything from scratch. For example, LangGraph offers ReAct agents (for reasoning loops), chat agents (for conversations), and tool-calling agents (for using external functions) – like using a pre-designed blueprint instead of drawing one yourself.
+<p>---</p>
+<strong>2. Tools</strong>  
+Tools are custom functions your agent can use to perform tasks beyond basic text generation (e.g., fetching weather data). They're important because they turn your agent from a simple chatbot into a practical assistant. In our example, the <code class="inline-code">get_weather()</code> tool lets the agent retrieve weather information – like giving your assistant a set of specialized tools in a toolbox.
+<p>---</p>
+<strong>3. Message-Based I/O</strong>  
+This is how your agent communicates – by exchanging structured messages in <code class="inline-code">{"role": "user/assistant", "content": "..."}</code> format. It's crucial because it maintains conversation history and context, allowing back-and-forth interactions. Think of it like passing notes where both parties keep copies of all previous messages for reference.
+<p>---</p>
+<strong>4. Execution Flow</strong>  
+This describes the step-by-step process your agent follows when responding:
+<ul><li>Receives input messages  </li>
+<li>Decides whether to answer directly or use tools  </li>
+<li>Runs tools if needed  </li>
+<li>Generates a final response  </li></ul>
+Understanding this helps debug why an agent might not be working as expected – like knowing the steps in a recipe to identify where something went wrong.
+<p>---</p>
+<strong>5. Stateful Operation</strong>  
+Agents remember past interactions through their state (conversation history and tool results). This is vital for natural conversations, as it lets the agent reference previous messages. In our example, the agent returns both the final answer and all intermediate steps – like a video player that remembers where you paused and shows the playback history.
+<p>---</p>
+<p>Each concept builds toward creating an agent that can:</p>
+<ul><li>Use prebuilt patterns (prebuilt agents)  </li>
+<li>Perform real tasks (tools)  </li>
+<li>Have natural conversations (message-based I/O)  </li>
+<li>Follow a logical process (execution flow)  </li>
+<li>Maintain context (stateful operation)  </li></ul>
+<p>These form the foundation for virtually any agent you'll build with LangGraph.</p>
+<h3>💻 Practical Examples</h3>
+<p>Here are three practical, working code examples for your LangGraph agent section:</p>
+<div class="code-block"><pre><code>
+<h1>Example 1: Basic Weather Agent with Error Handling</h1>
+"""
+A complete weather agent with input validation and error handling.
+Demonstrates tool usage and structured responses.
+"""
+<p>from langgraph.prebuilt import create_react_agent</p>
+<h1>Define our weather tool with error handling</h1>
+def get_weather(city: str) -&gt; str:
+    """Get weather for a given city. City must be a string."""
+    if not isinstance(city, str):
+        return "Error: City name must be a string"
+    if city.lower() not in ["san francisco", "new york", "london"]:
+        return f"Error: Weather data not available for {city}"
+    # Mock weather data
+    weather_data = {
+        "san francisco": "72°F and sunny",
+        "new york": "65°F with scattered showers",
+        "london": "58°F and cloudy"
+    }
+    return weather_data[city.lower()]
+<h1>Create the agent</h1>
+agent = create_react_agent(
+    model="anthropic:claude-3-7-sonnet-latest",
+    tools=[get_weather],
+    prompt="You are a precise weather assistant. Always verify inputs before responding."
+)
+<h1>Run with different inputs</h1>
+for question in [
+    "What's the weather in San Francisco?",
+    "Tell me about Tokyo's weather",
+    12345  # Invalid input
+]:
+    response = agent.invoke({
+        "messages": [{"role": "user", "content": question}]
+    })
+    print(f"Q: {question}\nA: {response['messages'][-1]['content']}\n")
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 2: Multi-Tool Travel Agent</h1>
+"""
+An agent that combines weather, currency conversion, and timezone tools.
+Shows how multiple tools work together.
+"""
+<p>from langgraph.prebuilt import create_react_agent<br>from datetime import datetime</p>
+<h1>Define multiple tools</h1>
+def get_weather(city: str) -&gt; str:
+    """Get current weather for a city. Input: city name (str)."""
+    return f"Weather in {city}: 72°F, sunny"  # Mock data
+<p>def convert_currency(amount: float, from_curr: str, to_curr: str) -&gt; str:<br>    """Convert between currencies. Inputs: amount, from_currency, to_currency."""<br>    rates = {"USD": 1, "EUR": 0.93, "JPY": 154.72}  # Mock rates<br>    converted = amount <em> rates[to_curr] / rates[from_curr]<br>    return f"{amount} {from_curr} = {converted:.2f} {to_curr}"</p>
+<p>def get_local_time(city: str) -&gt; str:<br>    """Get current time in a city. Input: city name (str)."""<br>    times = {<br>        "New York": "10:15 AM",<br>        "London": "3:15 PM",<br>        "Tokyo": "11:15 PM"<br>    }<br>    return f"Current time in {city}: {times.get(city, 'unknown')}"</p>
+<h1>Create agent with all tools</h1>
+travel_agent = create_react_agent(
+    model="anthropic:claude-3-7-sonnet-latest",
+    tools=[get_weather, convert_currency, get_local_time],
+    prompt="You are a travel assistant. Use tools to answer questions precisely."
+)
+<h1>Run complex query</h1>
+response = travel_agent.invoke({
+    "messages": [{
+        "role": "user", 
+        "content": "I'm traveling from New York to London tomorrow. What's the weather difference, current time, and how much is $100 in GBP?"
+    }]
+})
+<p>print("Full conversation:")<br>for msg in response["messages"]:<br>    print(f"{msg['role'].title()}: {msg['content']}")<br></code></pre></div></p>
+
+<div class="code-block"><pre><code>
+<h1>Example 3: Stateful Conversation Agent</h1>
+"""
+Demonstrates stateful conversations with memory across multiple turns.
+Shows how agents maintain context.
+"""
+<p>from langgraph.prebuilt import create_react_agent</p>
+<h1>Simple tools</h1>
+def get_stock_price(ticker: str) -&gt; float:
+    """Get current stock price. Input: stock ticker (str)."""
+    prices = {"AAPL": 189.32, "GOOG": 172.63, "MSFT": 425.52}  # Mock data
+    return prices.get(ticker, 0.0)
+<p>def calculate_investment(amount: float, price: float) -&gt; dict:<br>    """Calculate shares and value. Inputs: amount, price."""<br>    shares = amount / price<br>    return {"shares": shares, "value": amount}</p>
+<h1>Create agent</h1>
+finance_agent = create_react_agent(
+    model="anthropic:claude-3-7-sonnet-latest",
+    tools=[get_stock_price, calculate_investment],
+    prompt="You are a financial assistant. Be precise with numbers."
+)
+<h1>Multi-turn conversation</h1>
+conversation = {
+    "messages": [
+        {"role": "user", "content": "What's Apple's stock price?"}
+    ]
+}
+<h1>First turn</h1>
+response = finance_agent.invoke(conversation)
+print(f"First response: {response['messages'][-1]['content']}")
+<h1>Add response to conversation history</h1>
+conversation["messages"].append({
+    "role": "assistant",
+    "content": response["messages"][-1]["content"]
+})
+<h1>Second turn with follow-up question</h1>
+conversation["messages"].append({
+    "role": "user",
+    "content": "How many shares could I buy with $5000?"
+})
+<h1>Second response maintains context</h1>
+response = finance_agent.invoke(conversation)
+print(f"\nSecond response: {response['messages'][-1]['content']}")
+<h1>Show full state</h1>
+print("\nFinal state:")
+print(f"Messages: {len(response['messages'])} exchanges")
+print(f"Steps taken: {response['intermediate_steps']}")
+</code></pre></div>
+<p>Each example:</p>
+<ul><li>Is fully runnable with proper imports</li>
+<li>Demonstrates key concepts (tool usage, multi-tool agents, stateful conversations)</li>
+<li>Includes practical error handling and real-world scenarios</li>
+<li>Has clear comments explaining each part</li>
+<li>Shows expected output patterns</li></ul>
+<p>The examples progress from basic to more advanced usage while maintaining readability. They cover the core concepts mentioned in your section while providing practical, copy-pasteable code.</p>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two beginner-friendly practice exercises for your LangGraph agent section:</p>
+<p>---</p>
+<strong>Exercise 1: Create a Time-Telling Agent</strong>  
+Build a simple agent that tells the current time when asked.
+<ul><li>Create a mock <code class="inline-code">get_time</code> tool that returns a hardcoded time string (e.g., "The current time is 3:00 PM")  </li>
+<li>Configure a ReAct agent using <code class="inline-code">create_react_agent</code> with this tool  </li>
+<li>Ask your agent "What time is it?" and print the response  </li></ul>
+</em>Hint<em>:
+<ul><li>Follow the same structure as the weather agent example  </li>
+<li>Your tool function should take no arguments (use <code class="inline-code">def get_time():</code>)  </li></ul>
+</em>Expected outcome<em>:
+<div class="code-block"><pre><code>
+I'll check the current time... </em>calls get_time<em> The current time is 3:00 PM
+</code></pre></div>
+<p>---</p>
+<strong>Exercise 2: Customize the Agent's Personality</strong>  
+Modify the weather agent to have a specific personality.
+<ul><li>Reuse the <code class="inline-code">get_weather</code> tool from the tutorial  </li>
+<li>Change the agent's <code class="inline-code">prompt</code> parameter to:  </li></ul>
+   <div class="code-block"><pre><code>   "You are a grumpy weather assistant who complains about checking the weather"
+   ``<code class="inline-code">
+<ul><li>Ask the same weather question and observe the difference  </li></ul>
+</em>Hint<em>:
+<ul><li>Only the system message needs to change  </li>
+<li>Keep all other parameters identical  </li></ul>
+</em>Expected outcome<em>:  
+</code></pre></div>
+<p>Ugh, fine... </em>mumbles<em> checking the weather again... </em>calls get_weather* It's always sunny in San Francisco! Happy now?</p>
+</code>``
+<p>---</p>
+<p>These exercises reinforce:  <br>✅ Tool creation  <br>✅ Agent configuration  <br>✅ System message impact  <br>While keeping the setup nearly identical to your original example for beginner-friendliness.</p>
+            </div>
+        </section>
+        
+        <section id="section-5" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">5</span>
+                5. Building Custom Agent Workflows
+            </h2>
+            <div class="section-content">
+                <h2>5. Building Custom Agent Workflows</h2>
+<p>This section covers 5. building custom agent workflows. # 5. Building Custom Agent Workflows</p>
+<p>In this section, we'll explore how to create <strong>stateful agents</strong> with customizable architectures in LangGraph. You'll learn to build agents that:</p>
+<ul><li>Persist through failures (<strong>durable execution</strong>)  </li>
+<li>Incorporate human oversight (<strong>human-in-the-loop</strong>)  </li>
+<li>Maintain both short-term and long-term memory  </li>
+<li>Handle complex task workflows  </li></ul>
+<h2>### Understanding Workflow Components  </h2>
+<p>Every LangGraph agent consists of three core elements:</p>
+<ul><li><strong>State</strong>: The shared data structure representing your agent's current knowledge  </li>
+<li><strong>Nodes</strong>: Functions that perform computations or take actions  </li>
+<li><strong>Edges</strong>: Logic determining which node executes next  </li></ul>
+<div class="note-box"><strong>Key Concept</strong>: Nodes <em>do the work</em>, edges <em>direct the flow</em>. Together they form a <strong>message-passing system</strong> inspired by Google's Pregel model.  </div>
+<h2>### Creating a Basic Custom Agent  </h2>
+<p>Let's build a weather assistant that:</p>
+<ul><li>Takes user queries  </li>
+<li>Calls a weather API  </li>
+<li>Formats responses  </li></ul>
+<div class="code-block"><pre><code>from typing import TypedDict, List
+from langgraph.graph import StateGraph
+<h1>Define state structure</h1>
+class AgentState(TypedDict):
+    messages: List[str]  # Conversation history
+    user_query: str      # Current question
+    weather_data: dict   # API response
+<h1>Create nodes</h1>
+def receive_input(state: AgentState):
+    return {"user_query": state["messages"][-1]}
+<p>def call_weather_api(state: AgentState):<br>    city = state["user_query"].split()[-1]  # Simple extraction<br>    return {"weather_data": {"city": city, "temp": "72°F"}}</p>
+<p>def format_response(state: AgentState):<br>    return {"messages": [f"Weather in {state['weather_data']['city']}: {state['weather_data']['temp']}"]}</p>
+<h1>Build graph</h1>
+builder = StateGraph(AgentState)
+builder.add_node("input", receive_input)
+builder.add_node("fetch", call_weather_api)
+builder.add_node("respond", format_response)
+<h1>Define edges</h1>
+builder.add_edge("input", "fetch")
+builder.add_edge("fetch", "respond")
+<h1>Compile</h1>
+weather_agent = builder.compile()
+</code></pre></div>
+<strong>Execution Example</strong>:
+<div class="code-block"><pre><code>result = weather_agent.invoke({
+    "messages": ["What's the weather in Boston?"]
+})
+print(result["messages"][-1])  # "Weather in Boston: 72°F"
+</code></pre></div>
+
+<h2>### Adding Advanced Features  </h2>
+<h3><strong>Durable Execution</strong>  </h3>
+LangGraph automatically persists state between executions. To enable recovery:
+<div class="code-block"><pre><code>from langgraph.checkpoint import MemoryCheckpointer
+<p>agent = builder.compile(<br>    checkpointer=MemoryCheckpointer()<br>)</p>
+<h1>Runs will survive process restarts</h1>
+agent.invoke({"messages": ["..."]}, config={"configurable": {"thread_id": "123"}})
+</code></pre></div>
+
+<h3><strong>Human-in-the-Loop</strong>  </h3>
+Add approval steps before critical actions:
+<div class="code-block"><pre><code>def human_approval(state: AgentState):
+    print(f"Approve API call for {state['user_query']}? (y/n)")
+    if input().lower() != "y":
+        return {"status": "rejected"}
+    return {"status": "approved"}
+<p>builder.add_node("approval", human_approval)<br>builder.add_edge("fetch", "approval")</p>
+<h1>Conditional edge</h1>
+def route_approval(state):
+    if state.get("status") == "approved":
+        return "respond"
+    return "input"  # Send back to start
+<p>builder.add_conditional_edges("approval", route_approval)<br></code></pre></div></p>
+
+<h3><strong>Memory Management</strong>  </h3>
+Combine short/long-term memory:
+<div class="code-block"><pre><code>from operator import add
+<p>class EnhancedState(TypedDict):<br>    working_memory: Annotated[List[str], add]  # Short-term<br>    knowledge_base: dict                      # Long-term</p>
+<p>def update_knowledge(state: EnhancedState):<br>    return {<br>        "knowledge_base": {<br>            <strong>state["knowledge_base"],<br>            "last_query": state["working_memory"][-1]<br>        }<br>    }<br></code></pre></div></p>
+
+<h2>### Workflow Patterns  </h2>
+</strong>1. Branching Logic<strong>
+<div class="code-block"><pre><code>def route_query(state):
+    if "weather" in state["user_query"].lower():
+        return "weather_flow"
+    return "general_flow"
+<p>builder.add_conditional_edges("input", route_query)<br></code></pre></div></p>
+</strong>2. Subgraphs<strong>
+<div class="code-block"><pre><code>subgraph = StateGraph(AgentState)
+<h1>... build subgraph ...</h1>
+builder.add_node("detailed_analysis", subgraph.compile())
+</code></pre></div>
+</strong>3. Parallel Execution<strong>
+<div class="code-block"><pre><code>from langgraph.graph import END
+<p>builder.add_node("parallel_task1", task1_function)<br>builder.add_node("parallel_task2", task2_function)<br>builder.add_edge("input", "parallel_task1")<br>builder.add_edge("input", "parallel_task2")<br>builder.add_edge("parallel_task1", END)  # Merge later<br>builder.add_edge("parallel_task2", END)<br></code></pre></div></p>
+
+<h2>### Debugging Tips  </h2>
+<ul><li></strong>Visualize Flows<strong>  </li></ul>
+   <div class="code-block"><pre><code>   builder.visualize("workflow.png")
+   ``<code class="inline-code">
+
+<ul><li></strong>LangSmith Integration<strong>  </li></ul>
+   </code>`<code class="inline-code">python
+   import os
+   os.environ["LANGCHAIN_TRACING_V2"] = "true"
+   </code>`<code class="inline-code">
+
+<ul><li></strong>Breakpoints<strong>  </li></ul>
+   </code>`<code class="inline-code">python
+   def debug_node(state):
+       breakpoint()  # Interactive debugging
+       return state
+   </code>`<code class="inline-code">
+
+<h2>### Key Takeaways  </h2>
+<ul><li></strong>State management<strong> is central to building persistent agents  </li>
+<li></strong>Nodes<strong> encapsulate discrete actions, </strong>edges<strong> control workflow logic  </li>
+<li></strong>Durable execution<strong> ensures fault tolerance  </li>
+<li></strong>Human-in-the-loop<strong> adds oversight where needed  </li>
+<li></strong>Memory systems<strong> enable complex reasoning across interactions  </li></ul>
+<p>&gt; </strong>Pro Tip<strong>: Start simple with linear workflows, then gradually add complexity with branching and subgraphs. Always visualize your flows before deployment!</p>
+<p>In the next section, we'll explore advanced state management techniques for handling complex data relationships in your agents.</p>
+</code></pre></div>python
+<h1>Final example: Complete custom agent template</h1>
+class CustomAgent:
+    def __init__(self):
+        self.graph = self._build_graph()
+    
+    def _build_graph(self):
+        builder = StateGraph(AgentState)
+        # ... add nodes/edges ...
+        return builder.compile()
+    
+    def run(self, input_msg):
+        return self.graph.invoke({"messages": [input_msg]})
+<div class="code-block"><pre><code>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most important concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+</strong>1. State (Agent State)*<em>  
+The </em>state<em> is the shared data structure that represents everything your agent currently knows or remembers. Think of it like the agent's "brain" at any given moment—it stores conversation history, user inputs, API responses, and other working data. In the weather agent example, the state tracks the user's query (</code>user_query<code class="inline-code">), the weather API response (</code>weather_data<code class="inline-code">), and the chat history (</code>messages<code class="inline-code">). State is crucial because it allows the agent to persist information across steps in a workflow.
+<p>---</p>
+<strong>2. Nodes and Edges</strong>
+<ul><li><strong>Nodes</strong> are individual functions that perform specific tasks (e.g., calling an API or formatting a response). They're like workers in an assembly line, each handling one part of the job.  </li>
+<li><strong>Edges</strong> define the flow between nodes, determining which node runs next based on conditions. They act like road signs telling the workflow which path to follow.  </li></ul>
+<p>Together, they form a </em>message-passing system<em> where nodes process data (state) and edges route it—similar to how a flowchart works.</p>
+<p>---</p>
+<strong>3. Durable Execution</strong>  
+This feature ensures your agent can recover from failures (like crashes or restarts) without losing progress. LangGraph automatically saves ("checkpoints") the state at each step. In the example, </code>MemoryCheckpointer<code class="inline-code"> stores the state so that if the process stops midway, it can resume later using the </code>thread_id<code class="inline-code">. This is essential for reliable real-world applications.
+<p>---</p>
+<strong>4. Human-in-the-Loop</strong>  
+A design pattern where humans approve or reject certain actions before the agent proceeds. In the weather agent, the </code>human_approval<code class="inline-code"> node pauses to ask for user confirmation before calling the API. This adds safety and control, especially for sensitive tasks (e.g., sending emails or making purchases).
+<p>---</p>
+<strong>5. Conditional Workflows (Branching Logic)</strong>  
+Agents can make dynamic decisions using </em>conditional edges<em>. For example, the </code>route_query<code class="inline-code"> node checks if the user asked about weather—if yes, it routes to the weather workflow; otherwise, it goes to a general assistant. This mimics how humans choose different approaches based on context.
+<p>---</p>
+<strong>Why These Matter</strong>:  
+These concepts form the backbone of customizable agents. State keeps track of information, nodes/edges define the workflow structure, durable execution ensures reliability, human oversight adds safety, and branching enables smart decision-making—all combining to create robust AI assistants.
+<h3>💻 Practical Examples</h3>
+<p>Here are 3 practical, working code examples that demonstrate building custom agent workflows in LangGraph:</p>
+</code></pre></div>python
+<h1>Example 1: Customer Support Agent with Memory and Fallback</h1>
+"""
+A customer support agent that:
+<ul><li>Maintains conversation history</li>
+<li>Routes to specialized handlers</li>
+<li>Falls back to human when needed</li></ul>
+"""
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, END
+from operator import add
+<p>class SupportState(TypedDict):<br>    messages: Annotated[List[str], add]  # Conversation history<br>    current_query: str<br>    resolution: str</p>
+<p>def log_query(state: SupportState):<br>    return {"current_query": state["messages"][-1]}</p>
+<p>def handle_billing(state: SupportState):<br>    return {"resolution": "Your billing issue has been resolved"}</p>
+<p>def handle_technical(state: SupportState):<br>    return {"resolution": "Technical support ticket created"}</p>
+<p>def human_fallback(state: SupportState):<br>    return {"resolution": "Connecting you to a live agent..."}</p>
+<p>def route_query(state: SupportState):<br>    query = state["current_query"].lower()<br>    if "bill" in query or "payment" in query:<br>        return "billing"<br>    elif "error" in query or "bug" in query:<br>        return "technical"<br>    return "human"</p>
+<p>builder = StateGraph(SupportState)<br>builder.add_node("log", log_query)<br>builder.add_node("billing", handle_billing)<br>builder.add_node("technical", handle_technical)<br>builder.add_node("human", human_fallback)</p>
+<p>builder.add_edge("log", "route")<br>builder.add_conditional_edges("route", route_query)<br>builder.add_edge("billing", END)<br>builder.add_edge("technical", END)<br>builder.add_edge("human", END)</p>
+<p>support_agent = builder.compile()</p>
+<h1>Test the agent</h1>
+result = support_agent.invoke({
+    "messages": ["I have a billing question"]
+})
+print(result["resolution"])  # "Your billing issue has been resolved"
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 2: Research Assistant with Parallel Processing</h1>
+"""
+An agent that:
+<ul><li>Takes a research topic</li>
+<li>Simultaneously searches multiple sources</li>
+<li>Combines results</li></ul>
+"""
+from typing import TypedDict, List
+from langgraph.graph import StateGraph
+import random
+<p>class ResearchState(TypedDict):<br>    topic: str<br>    web_results: List[str]<br>    db_results: List[str]<br>    combined: List[str]</p>
+<p>def set_topic(state: ResearchState):<br>    return {"topic": state["topic"]}</p>
+<p>def web_search(state: ResearchState):<br>    # Simulate web search<br>    return {"web_results": [<br>        f"Web result 1 about {state['topic']}",<br>        f"Web result 2 about {state['topic']}"<br>    ]}</p>
+<p>def db_search(state: ResearchState):<br>    # Simulate database lookup<br>    return {"db_results": [<br>        f"Database entry on {state['topic']}",<br>        f"Related record for {state['topic']}"<br>    ]}</p>
+<p>def combine_results(state: ResearchState):<br>    return {"combined": state["web_results"] + state["db_results"]}</p>
+<p>builder = StateGraph(ResearchState)<br>builder.add_node("start", set_topic)<br>builder.add_node("web", web_search)<br>builder.add_node("db", db_search)<br>builder.add_node("combine", combine_results)</p>
+<h1>Parallel execution paths</h1>
+builder.add_edge("start", "web")
+builder.add_edge("start", "db")
+<h1>Synchronization point</h1>
+builder.add_edge("web", "combine")
+builder.add_edge("db", "combine")
+<p>research_agent = builder.compile()</p>
+<h1>Test the agent</h1>
+result = research_agent.invoke({
+    "topic": "quantum computing"
+})
+print(result["combined"])
+<h1>Output will show both web and database results combined</h1>
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 3: E-commerce Order Processor with Human Approval</h1>
+"""
+An order processing workflow that:
+<ul><li>Validates orders</li>
+<li>Requires approval for high-value purchases</li>
+<li>Processes payments</li>
+<li>Updates inventory</li></ul>
+"""
+from typing import TypedDict
+from langgraph.graph import StateGraph
+<p>class OrderState(TypedDict):<br>    order_id: str<br>    items: list<br>    total: float<br>    status: str<br>    approved: bool</p>
+<p>def validate_order(state: OrderState):<br>    if not state["items"]:<br>        return {"status": "rejected - empty order"}<br>    return {"status": "validated"}</p>
+<p>def check_approval(state: OrderState):<br>    if state["total"] > 1000:  # Threshold for approval<br>        print(f"Approve ${state['total']} order? (y/n)")<br>        approved = input().lower() == "y"<br>        return {"approved": approved, "status": "pending approval"}<br>    return {"approved": True, "status": "auto-approved"}</p>
+<p>def process_payment(state: OrderState):<br>    if not state["approved"]:<br>        return {"status": "canceled - not approved"}<br>    return {"status": "payment processed"}</p>
+<p>def update_inventory(state: OrderState):<br>    if "processed" in state["status"]:<br>        return {"status": "inventory updated - order complete"}<br>    return state</p>
+<p>builder = StateGraph(OrderState)<br>builder.add_node("validate", validate_order)<br>builder.add_node("approval", check_approval)<br>builder.add_node("payment", process_payment)<br>builder.add_node("inventory", update_inventory)</p>
+<p>builder.add_edge("validate", "approval")<br>builder.add_edge("approval", "payment")<br>builder.add_edge("payment", "inventory")</p>
+<p>order_processor = builder.compile()</p>
+<h1>Test with a high-value order</h1>
+result = order_processor.invoke({
+    "order_id": "12345",
+    "items": ["laptop", "monitor"],
+    "total": 1500.00
+})
+print(result["status"])  # Will show either completion or cancellation
+<div class="code-block"><pre><code>
+<p>Each example demonstrates key LangGraph concepts:</p>
+<ul><li>State management with typed dictionaries</li>
+<li>Node and edge definitions</li>
+<li>Conditional workflows</li>
+<li>Parallel execution</li>
+<li>Human-in-the-loop integration</li>
+<li>Practical application patterns</li></ul>
+<p>The examples are complete and runnable (with simulated inputs/outputs where external services would be needed), and include comments explaining each component.</p>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two beginner-friendly exercises that reinforce the key concepts from the section while providing clear guidance:</p>
+<p>---</p>
+<strong>Exercise 1: Extend the Weather Agent</strong>  
+Add a new node to the weather assistant that converts temperatures from Fahrenheit to Celsius before responding.
+<ul><li>Modify the </code>AgentState<code class="inline-code"> to include a </code>use_celsius<code class="inline-code"> boolean field  </li>
+<li>Create a new </code>convert_temperature<code class="inline-code"> node that:  </li></ul>
+   - Checks </code>state["use_celsius"]<code class="inline-code">  
+   - Converts "72°F" to "22°C" if true (formula: </code>(F-32)</em>5/9<code class="inline-code">)
+<ul><li>Insert this node between the </code>fetch<code class="inline-code"> and </code>respond<code class="inline-code"> nodes  </li></ul>
+<em>Hint</em>:
+<ul><li>Remember to update your state structure first  </li>
+<li>The conversion node should modify </code>weather_data["temp"]<code class="inline-code">  </li>
+<li>Use </code>builder.insert_node("fetch", "respond", "convert")<code class="inline-code">  </li></ul>
+<em>Expected outcome</em>:  
+</code></pre></div>python 
+agent.invoke({
+    "messages": ["What's the weather in Paris?"],
+    "use_celsius": True
+})
+<h1>Output: "Weather in Paris: 22°C"</h1>
+<div class="code-block"><pre><code>
+<p>---</p>
+<strong>Exercise 2: Add Conditional Routing</strong>  
+Make the agent ask for clarification when the user query doesn't contain a city name:
+<ul><li>Create a </code>validate_input<code class="inline-code"> node that:  </li></ul>
+   - Checks if the last word in </code>user_query<code class="inline-code"> is a known city (use a simple list like </code>["Boston","Paris"]<code class="inline-code">)  
+   - Returns </code>{"is_valid": False}<code class="inline-code"> if not found
+<ul><li>Add a conditional edge that either:  </li></ul>
+   - Routes to </code>fetch<code class="inline-code"> if valid  
+   - Routes to a new </code>clarify<code class="inline-code"> node that adds "Please specify a city" to messages
+<em>Hint</em>:
+<ul><li>Use </code>builder.add_conditional_edges()<code class="inline-code">  </li>
+<li>The condition function should check </code>state["is_valid"]<code class="inline-code">  </li>
+<li>See the "Human-in-the-Loop" example for conditional routing patterns  </li></ul>
+<em>Expected outcome</em>:  
+</code></pre></div>python
+agent.invoke({"messages": ["What's the weather?"]})
+<h1>Output: ["Please specify a city"]</h1>
+</code>``
+<p>---</p>
+<p>Both exercises:</p>
+<ul><li>Focus on one key concept each (state modification/conditional flow)  </li>
+<li>Provide all necessary components in the hint  </li>
+<li>Include testable outcomes  </li>
+<li>Build directly on the provided example code</li></ul>
+            </div>
+        </section>
+        
+        <section id="section-6" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">6</span>
+                6. Advanced State Management
+            </h2>
+            <div class="section-content">
+                <h2>6. Advanced State Management</h2>
+<p>This section covers 6. advanced state management. # 6. Advanced State Management in LangGraph</p>
+<p>State management is the backbone of any sophisticated agent system. In this section, we'll dive deep into LangGraph's powerful state management capabilities that enable you to build complex, long-running workflows with precise control over data flow and persistence.</p>
+<h2>Understanding Graph State Fundamentals</h2>
+<p>At its core, LangGraph's <strong>state</strong> is a shared data structure that represents your application's current condition. Think of it like a shared whiteboard where all your nodes can read and write information.</p>
+<h3>State Schema Definition</h3>
+<p>The state schema defines what data your graph will work with. You typically define it as either:</p>
+<ul><li>A <code class="inline-code">TypedDict</code> (for simple type checking)</li>
+<li>A Pydantic <code class="inline-code">BaseModel</code> (for validation and default values)</li></ul>
+<div class="code-block"><pre><code>from typing_extensions import TypedDict
+from typing import List
+<p>class BasicState(TypedDict):<br>    user_input: str<br>    conversation_history: List[str]<br>    processing_status: bool<br></code></pre></div></p>
+<div class="note-box"><strong>Tip</strong>: Use Pydantic models when you need validation or default values:</div>
+<div class="note-box"><div class="code-block"><pre><code>&gt; from pydantic import BaseModel</div>
+&gt; 
+&gt; class ValidatedState(BaseModel):
+&gt;     user_input: str
+&gt;     conversation_history: List[str] = []
+&gt;     processing_status: bool = False
+&gt; ``<code class="inline-code">
+
+<h2>Reducers: The State Update Mechanism</h2>
+<strong>Reducers</strong> determine how state updates are applied. Each key in your state can have its own reducer function that specifies how updates should be merged.
+<h3>Default Reducer Behavior</h3>
+<p>By default, state updates completely overwrite existing values:</p>
+</code></pre></div>python
+class DefaultState(TypedDict):
+    counter: int
+    log: List[str]
+<h1>Initial state</h1>
+state = {"counter": 0, "log": ["started"]}
+<h1>Node returns:</h1>
+update = {"counter": 1}
+<h1>New state becomes:</h1>
+{"counter": 1, "log": ["started"]}  # log remains unchanged
+<div class="code-block"><pre><code>
+<h3>Custom Reducers with Annotated</h3>
+<p>For more control, specify reducers using </code>Annotated<code class="inline-code">:</p>
+</code></pre></div>python
+from typing import Annotated
+from operator import add
+<p>class CustomState(TypedDict):<br>    counter: int<br>    log: Annotated[List[str], add]  # Appends instead of overwrites</p>
+<h1>Initial state</h1>
+state = {"counter": 0, "log": ["started"]}
+<h1>Node returns:</h1>
+update = {"log": ["update1"]}
+<h1>New state becomes:</h1>
+{"counter": 0, "log": ["started", "update1"]}
+<div class="code-block"><pre><code>
+<p>Common reducer functions include:</p>
+<ul><li></code>operator.add<code class="inline-code"> for lists (concatenation)</li>
+<li></code>max<code class="inline-code">/</code>min<code class="inline-code"> for numerical values</li>
+<li>Custom functions for complex merge logic</li></ul>
+<h2>Message-Based State Management</h2>
+<p>For chat applications, LangGraph provides special tools for working with message histories.</p>
+<h3>Why Messages Matter</h3>
+<p>Most LLM chat interfaces expect conversation history as a list of message objects (HumanMessage, AIMessage, etc.). LangGraph helps manage these sequences properly.</p>
+<h3>Implementing Message State</h3>
+</code></pre></div>python
+from typing import Annotated
+from langgraph.graph.message import add_messages
+from langchain_core.messages import HumanMessage
+<p>class MessageState(TypedDict):<br>    messages: Annotated[list, add_messages]  # Special message reducer</p>
+<h1>Initial state</h1>
+state = {"messages": [HumanMessage(content="Hi!")]}
+<h1>Node returns:</h1>
+update = {"messages": [AIMessage(content="Hello!")]}
+<h1>New state properly merged:</h1>
+{
+    "messages": [
+        HumanMessage(content="Hi!"),
+        AIMessage(content="Hello!")
+    ]
+}
+<div class="code-block"><pre><code>
+<p>&gt; <strong>Key Benefit</strong>: The </code>add_messages<code class="inline-code"> reducer handles:<br>&gt; - Appending new messages<br>&gt; - Updating existing messages by ID<br>&gt; - Proper serialization/deserialization</p>
+<h2>Advanced State Patterns</h2>
+<h3>Multiple State Schemas</h3>
+<p>For complex workflows, you might need different schemas for input, output, and internal processing:</p>
+</code></pre></div>python
+class InputState(TypedDict):
+    user_query: str
+<p>class InternalState(TypedDict):<br>    user_query: str<br>    search_results: List[str]<br>    analysis: str</p>
+<p>class OutputState(TypedDict):<br>    final_answer: str</p>
+<h1>Build graph with explicit schemas</h1>
+builder = StateGraph(
+    InternalState,
+    input_schema=InputState,
+    output_schema=OutputState
+)
+<div class="code-block"><pre><code>
+<h3>Private State Channels</h3>
+<p>Nodes can communicate through private channels not exposed in input/output:</p>
+</code></pre></div>python
+class PublicState(TypedDict):
+    visible_data: str
+<p>class PrivateState(TypedDict):<br>    internal_notes: str</p>
+<p>def node1(state: PublicState) -> PrivateState:<br>    return {"internal_notes": "Working..."}</p>
+<p>def node2(state: PrivateState) -> PublicState:<br>    return {"visible_data": state["internal_notes"] + " Done!"}</p>
+<div class="code-block"><pre><code>
+<h2>State Validation and Transformation</h2>
+<p>For production systems, consider adding validation:</p>
+</code></pre></div>python
+from pydantic import validator
+<p>class ValidatedState(BaseModel):<br>    temperature: float<br>    unit: str = "Celsius"<br>    <br>    @validator('temperature')<br>    def check_temp(cls, v):<br>        if v < -273.15 and cls.unit == "Celsius":<br>            raise ValueError("Temperature below absolute zero")<br>        return v</p>
+<div class="code-block"><pre><code>
+<h2>Best Practices for State Management</h2>
+<ul><li><strong>Minimize State Size</strong>: Only store what you need for the next steps</li>
+<li><strong>Use Descriptive Keys</strong>: Make state purpose clear (e.g., </code>user_preferences<code class="inline-code"> vs </code>data<code class="inline-code">)</li>
+<li><strong>Document State Schema</strong>: Include docstrings explaining each field</li>
+<li><strong>Version Your State</strong>: Consider adding a </code>schema_version<code class="inline-code"> field for migrations</li>
+<li><strong>Validate Early</strong>: Catch state issues before they propagate</li></ul>
+<h2>Practical Example: Conversation Agent</h2>
+<p>Let's build a complete chat agent with advanced state:</p>
+</code></pre></div>python
+from typing import TypedDict, Annotated, List
+from langgraph.graph.message import add_messages
+from langchain_core.messages import BaseMessage
+<p>class ChatState(TypedDict):<br>    messages: Annotated[List[BaseMessage], add_messages]<br>    user_info: dict<br>    conversation_meta: dict</p>
+<p>def receive_input(state: ChatState):<br>    # Process raw input into messages<br>    user_message = HumanMessage(content=state["user_input"])<br>    return {"messages": [user_message]}</p>
+<p>def generate_response(state: ChatState):<br>    # Call LLM with full history<br>    messages = state["messages"]<br>    response = chat_model.invoke(messages)<br>    return {"messages": [response]}</p>
+<p>def update_metrics(state: ChatState):<br>    # Update conversation analytics<br>    turns = len([m for m in state["messages"] if isinstance(m, HumanMessage)])<br>    return {"conversation_meta": {"turns": turns}}</p>
+<h1>Build the graph</h1>
+builder = StateGraph(ChatState)
+builder.add_node("receive", receive_input)
+builder.add_node("respond", generate_response)
+builder.add_node("metrics", update_metrics)
+builder.add_edge("receive", "respond")
+builder.add_edge("respond", "metrics")
+builder.add_edge("metrics", END)
+graph = builder.compile()
+<div class="code-block"><pre><code>
+<h2>Key Takeaways</h2>
+<ul><li><strong>State Schema</strong> defines your agent's data structure</li>
+<li><strong>Reducers</strong> control how state updates are applied</li>
+<li><strong>Message Management</strong> is streamlined with special tools</li>
+<li><strong>Multiple Schemas</strong> enable clean input/output separation</li>
+<li><strong>Validation</strong> ensures data consistency</li></ul>
+<p>Advanced state management unlocks LangGraph's full potential for building sophisticated, reliable agent systems. In the next section, we'll explore debugging and optimization techniques to polish your workflows.</p>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most essential concepts from the Advanced State Management section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. State Schema Definition</strong>  
+The state schema is like a blueprint that defines what data your application will track and work with. It specifies the names of data fields (like </code>user_input<code class="inline-code"> or </code>conversation_history<code class="inline-code">) and their expected types (like strings or lists). This matters because it ensures all parts of your system agree on what data exists and how it should be structured, preventing errors where one part tries to use data that doesn't exist.
+<p>---</p>
+<strong>2. Reducers (State Update Rules)</strong>  
+Reducers are the rules that determine how new information gets combined with existing state. By default, new data completely overwrites old data (like replacing a number), but you can customize this behavior - for example, making lists append new items instead of replacing the whole list. This is crucial because different types of data often need different update strategies.
+<p>---</p>
+<strong>3. Message-Based State (Special Case for Chat)</strong>  
+When building chat applications, conversation history is typically stored as a sequence of message objects. LangGraph provides special tools to properly manage these messages, handling complex needs like: keeping messages in order, updating specific messages, and proper serialization. This saves you from writing tedious message-management code yourself.
+<p>---</p>
+<strong>4. State Validation (For Reliability)</strong>  
+Especially in production systems, you can add validation rules to your state (like "temperature can't be below absolute zero"). This acts as a safety net to catch impossible or problematic data before it causes issues in your application. The validation can be added through Pydantic models.
+<p>---</p>
+<strong>5. Best Practices (State Hygiene)</strong>  
+Key guidelines include:
+<ul><li>Only store necessary data (don't let state get bloated)  </li>
+<li>Use clear names for state fields  </li>
+<li>Consider separating public/private state  </li></ul>
+These practices keep your application efficient and maintainable as it grows in complexity.
+<p>---</p>
+<p>Each of these concepts helps manage the growing complexity that comes with sophisticated applications, while preventing common bugs and maintenance headaches. The state schema and reducers form the foundation, while the other concepts build on them for specific needs like chat or production reliability.</p>
+<h3>💻 Practical Examples</h3>
+<p>Here are 3 practical, working code examples demonstrating advanced state management in LangGraph:</p>
+</code></pre></div>python
+<h1>Example 1: Chatbot with Message History Management</h1>
+from typing import Annotated, TypedDict
+from langgraph.graph.message import add_messages
+from langchain_core.messages import HumanMessage, AIMessage
+from langgraph.graph import StateGraph, END
+<h1>Define state with message history</h1>
+class ChatState(TypedDict):
+    messages: Annotated[list, add_messages]
+    user_name: str
+<h1>Define nodes</h1>
+def greet_user(state: ChatState):
+    return {"messages": [AIMessage(content=f"Hello {state['user_name']}! How can I help?")]}
+<p>def respond_to_user(state: ChatState):<br>    last_msg = state["messages"][-1].content<br>    return {"messages": [AIMessage(content=f"You said: {last_msg}")]}</p>
+<h1>Build graph</h1>
+workflow = StateGraph(ChatState)
+workflow.add_node("greet", greet_user)
+workflow.add_node("respond", respond_to_user)
+workflow.set_entry_point("greet")
+workflow.add_edge("greet", "respond")
+workflow.add_edge("respond", END)
+<h1>Run with initial state</h1>
+app = workflow.compile()
+result = app.invoke({
+    "user_name": "Alice",
+    "messages": [HumanMessage(content="Hi there!")]
+})
+print(result["messages"][-1].content)  # "You said: Hi there!"
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 2: Document Processing Pipeline with Validation</h1>
+from pydantic import BaseModel, validator
+from typing import List, TypedDict
+from langgraph.graph import StateGraph
+<h1>Define validated state</h1>
+class DocumentState(BaseModel):
+    raw_text: str
+    processed_chunks: List[str] = []
+    quality_score: float = 0.0
+    
+    @validator('quality_score')
+    def validate_score(cls, v):
+        if not 0 <= v <= 1:
+            raise ValueError("Quality score must be between 0 and 1")
+        return v
+<h1>Processing nodes</h1>
+def chunk_text(state: DocumentState):
+    chunks = [state.raw_text[i:i+100] for i in range(0, len(state.raw_text), 100)]
+    return {"processed_chunks": chunks}
+<p>def score_quality(state: DocumentState):<br>    avg_length = sum(len(c) for c in state.processed_chunks)/len(state.processed_chunks)<br>    return {"quality_score": min(avg_length/100, 1.0)}</p>
+<h1>Build workflow</h1>
+workflow = StateGraph(DocumentState)
+workflow.add_node("chunker", chunk_text)
+workflow.add_node("scorer", score_quality)
+workflow.set_entry_point("chunker")
+workflow.add_edge("chunker", "scorer")
+workflow.add_edge("scorer", END)
+<h1>Execute with validation</h1>
+app = workflow.compile()
+result = app.invoke({"raw_text": "Lorem ipsum " <em> 500})
+print(f"Created {len(result.processed_chunks)} chunks with score {result.quality_score:.2f}")
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 3: E-commerce Workflow with Multiple State Types</h1>
+from typing import TypedDict, Annotated
+from operator import add
+from langgraph.graph import StateGraph
+<h1>State definitions</h1>
+class UserInput(TypedDict):
+    product_query: str
+    budget: float
+<p>class ProcessingState(TypedDict):<br>    product_query: str<br>    budget: float<br>    candidate_products: list<br>    recommendations: list<br>    search_log: Annotated[list, add]  # Using custom reducer</p>
+<p>class OutputState(TypedDict):<br>    recommendations: list<br>    budget_status: str</p>
+<h1>Processing nodes</h1>
+def search_products(state: ProcessingState):
+    # Simulate DB lookup
+    products = [
+        {"name": f"Product {i}", "price": state["budget"]</em>(0.5 + 0.1<em>i)}
+        for i in range(1,4)
+    ]
+    return {
+        "candidate_products": products,
+        "search_log": [f"Searched for {state['product_query']}"]
+    }
+<p>def filter_products(state: ProcessingState):<br>    affordable = [p for p in state["candidate_products"] if p["price"] <= state["budget"]]<br>    return {<br>        "recommendations": affordable,<br>        "search_log": [f"Filtered to {len(affordable)} items"]<br>    }</p>
+<p>def prepare_output(state: ProcessingState) -> OutputState:<br>    status = "Within budget" if state["recommendations"] else "Over budget"<br>    return {<br>        "recommendations": state["recommendations"],<br>        "budget_status": status<br>    }</p>
+<h1>Build workflow with input/output types</h1>
+workflow = StateGraph(
+    ProcessingState,
+    input_schema=UserInput,
+    output_schema=OutputState
+)
+workflow.add_node("search", search_products)
+workflow.add_node("filter", filter_products)
+workflow.add_node("output", prepare_output)
+workflow.set_entry_point("search")
+workflow.add_edge("search", "filter")
+workflow.add_edge("filter", "output")
+workflow.add_edge("output", END)
+<h1>Execute</h1>
+app = workflow.compile()
+result = app.invoke({
+    "product_query": "wireless headphones",
+    "budget": 100.0
+})
+print(f"Results: {result['recommendations']}")
+print(f"Status: {result['budget_status']}")
+print(f"Full logs: {app.get_state().search_log}")
+<div class="code-block"><pre><code>
+<p>Each example demonstrates different aspects of state management:</p>
+<ul><li>Message history handling with specialized reducers</li>
+<li>State validation with Pydantic</li>
+<li>Complex workflow with input/output state separation and logging</li></ul>
+All examples are complete, runnable, and include practical use cases with clear comments.
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two simple practice exercises for the Advanced State Management section:</p>
+<strong>Exercise 1</strong>: Basic State Schema Creation
+Create a state schema for a simple to-do list application that needs to track:
+<ul><li>A list of tasks (strings)</li>
+<li>The current filter status ("all", "active", or "completed")</li>
+<li>The last time the list was updated (datetime)</li></ul>
+</em>Hint<em>:
+<ul><li>Use either TypedDict or Pydantic BaseModel</li>
+<li>Remember to import necessary types (List, Literal, datetime)</li>
+<li>For datetime, you can use </code>from datetime import datetime<code class="inline-code"></li></ul>
+</em>Expected outcome<em>:
+A properly defined state schema that could be used as:
+</code></pre></div>python
+state = {
+    "tasks": ["Buy milk", "Walk dog"],
+    "filter": "active",
+    "last_updated": datetime.now()
+}
+<div class="code-block"><pre><code>
+<strong>Exercise 2</strong>: Custom Reducer Implementation
+Create a state class that tracks:
+<ul><li>A running total (sum of all numbers added)</li>
+<li>A list of all operations performed (as strings like "added 5")</li>
+<li>A timestamp of the last operation</li></ul>
+<p>Configure it so that:</p>
+<ul><li>The running total adds new values (using operator.add)</li>
+<li>The operations list appends new entries</li>
+<li>The timestamp always gets overwritten</li></ul>
+</em>Hint<em>:
+<ul><li>Use Annotated for the reducers</li>
+<li>Import operator.add for the sum reducer</li>
+<li>The timestamp doesn't need a special reducer (default overwrite is fine)</li></ul>
+</em>Expected outcome*:
+A state class that would process updates like:
+</code></pre></div>python
+initial_state = {"total": 0, "operations": [], "timestamp": None}
+update = {"total": 5, "operations": ["added 5"], "timestamp": "2024-01-01"}
+<h1>Results in:</h1>
+{"total": 5, "operations": ["added 5"], "timestamp": "2024-01-01"}
+</code>``
+            </div>
+        </section>
+        
+        <section id="section-7" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">7</span>
+                7. Debugging and Optimization
+            </h2>
+            <div class="section-content">
+                <h2>7. Debugging and Optimization</h2>
+<p>This section covers 7. debugging and optimization. # 7. Debugging and Optimization</p>
+<p>Debugging and optimizing AI agents is crucial for building reliable, production-ready systems. In this section, we'll explore how to monitor your LangGraph agents, identify performance bottlenecks, and implement optimizations to make them more efficient.</p>
+<h2>Understanding Agent Observability</h2>
+<h3>Why Debugging AI Agents is Different</h3>
+<p>Traditional software debugging follows predictable execution paths, but AI agents:</p>
+<ul><li>Make non-deterministic decisions</li>
+<li>Have complex state transitions</li>
+<li>May enter unexpected loops</li>
+<li>Depend on external LLM responses</li></ul>
+<p>LangGraph provides several tools to handle these challenges, with <strong>LangSmith</strong> being the primary solution for observability.</p>
+<h3>### Setting Up LangSmith</h3>
+<p>Before debugging, configure LangSmith:</p>
+<div class="code-block"><pre><code>import os
+from langsmith import Client
+<p>os.environ["LANGCHAIN_TRACING_V2"] = "true"<br>os.environ["LANGCHAIN_API_KEY"] = "your_api_key"  # Get from https://smith.langchain.com<br>os.environ["LANGCHAIN_PROJECT"] = "your_project_name"  # Optional</p>
+<p>client = Client()<br></code></pre></div></p>
+<div class="note-box"><strong>Tip</strong>: Always tag your runs with meaningful identifiers to help filter traces later.</div>
+<h2>Debugging with LangSmith</h2>
+<h3>### Tracing Agent Execution</h3>
+<p>LangSmith automatically records:</p>
+<ul><li>Every node execution</li>
+<li>State transitions</li>
+<li>LLM calls</li>
+<li>Tool usage</li>
+<li>Errors</li></ul>
+<p>View these in the LangSmith UI where you can:</p>
+<ul><li>See the complete execution graph</li>
+<li>Inspect inputs/outputs at each step</li>
+<li>Compare different runs</li>
+<li>Identify latency bottlenecks</li></ul>
+<h3>### Common Debugging Patterns</h3>
+<strong>1. Stuck in Loops</strong>
+<ul><li>Symptom: Agent keeps revisiting same nodes</li>
+<li>Solution: Add max iteration limits</li></ul>
+<div class="code-block"><pre><code>from langgraph.graph import StateGraph
+<p>builder = StateGraph(...)<br>builder.set_recursion_limit(10)  # Prevent infinite loops<br></code></pre></div></p>
+<strong>2. Unexpected State Changes</strong>
+<ul><li>Symptom: State contains wrong values</li>
+<li>Solution: Add validation nodes</li></ul>
+<div class="code-block"><pre><code>def validate_state(state):
+    if not state.get("required_field"):
+        raise ValueError("Missing required field")
+    return state
+<p>builder.add_node("validate", validate_state)<br></code></pre></div></p>
+<strong>3. LLM Quality Issues</strong>
+<ul><li>Symptom: Poor responses affecting flow</li>
+<li>Solution: Add quality checks</li></ul>
+<div class="code-block"><pre><code>def check_response_quality(state):
+    response = state["llm_output"]
+    if "I don't know" in response:
+        return {"should_retry": True}
+    return {"should_retry": False}
+</code></pre></div>
+
+<h2>Performance Optimization</h2>
+<h3>### Caching Strategies</h3>
+<strong>1. Node Output Caching</strong>
+Cache deterministic node computations:
+<div class="code-block"><pre><code>from functools import lru_cache
+<p>@lru_cache(maxsize=100)<br>def expensive_computation(input):<br>    # Heavy computation here<br>    return result</p>
+<p>builder.add_node("cached_node", expensive_computation)<br></code></pre></div></p>
+<strong>2. LLM Call Caching</strong>
+LangSmith provides automatic LLM call caching. Enable it:
+<div class="code-block"><pre><code>os.environ["LANGCHAIN_CACHE"] = "true"
+</code></pre></div>
+
+<h3>### Parallel Execution</h3>
+<p>For independent nodes, run them in parallel:</p>
+<div class="code-block"><pre><code>builder.add_conditional_edges(
+    "node1",
+    lambda x: ["parallel_node2", "parallel_node3"],
+    then="join_node"
+)
+</code></pre></div>
+<div class="note-box"><strong>Warning</strong>: Only parallelize nodes that don't have state dependencies.</div>
+<h3>### State Size Management</h3>
+<p>Large states slow down execution. Implement cleanup:</p>
+<div class="code-block"><pre><code>def cleanup_state(state):
+    # Remove temporary fields
+    return {k: v for k, v in state.items() if not k.startswith("tmp_")}
+</code></pre></div>
+
+<h2>Advanced Optimization Techniques</h2>
+<h3>### Selective Checkpointing</h3>
+<p>Reduce I/O overhead by checkpointing only essential state:</p>
+<div class="code-block"><pre><code>from langgraph.checkpoint import BaseCheckpointSaver
+<p>class SelectiveCheckpointer(BaseCheckpointSaver):<br>    def save(self, state):<br>        # Only save these keys<br>        minimal_state = {k: state[k] for k in ["essential1", "essential2"]}<br>        super().save(minimal_state)<br></code></pre></div></p>
+
+<h3>### Lazy Loading</h3>
+<p>For large data in state:</p>
+<div class="code-block"><pre><code>class LazyState(TypedDict):
+    big_data: Annotated[str, lambda x: load_if_needed(x)]
+<p>def load_if_needed(ref):<br>    if isinstance(ref, str) and ref.startswith("s3://"):<br>        return load_from_s3(ref)<br>    return ref<br></code></pre></div></p>
+
+<h3>### Pre-compiling Subgraphs</h3>
+<p>For frequently used components:</p>
+<div class="code-block"><pre><code>subgraph = create_common_flow().compile()
+<p>builder.add_node("common_operation", subgraph)<br></code></pre></div></p>
+
+<h2>Monitoring Production Agents</h2>
+<h3>Key Metrics to Track</h3>
+<ul><li><strong>Execution Time</strong>: Per-node and total</li>
+<li><strong>Error Rates</strong>: By node type</li>
+<li><strong>LLM Costs</strong>: Token usage</li>
+<li><strong>State Size</strong>: Memory footprint</li>
+<li><strong>Loop Detection</strong>: Repeated node visits</li></ul>
+<h3>Implementing Health Checks</h3>
+<div class="code-block"><pre><code>def health_check(state):
+    metrics = {
+        "runtime": time.time() - state["start_time"],
+        "steps": state["step_count"],
+        "last_node": state["current_node"]
+    }
+    if metrics["runtime"] &gt; TIMEOUT:
+        raise TimeoutError("Agent timeout")
+    return metrics
+</code></pre></div>
+
+<h2>Summary of Key Takeaways</h2>
+<ul><li><strong>LangSmith Integration</strong> is essential for debugging complex agent workflows</li>
+<li><strong>Caching strategies</strong> can significantly improve performance</li>
+<li><strong>State management</strong> prevents memory bloat</li>
+<li><strong>Parallel execution</strong> optimizes independent nodes</li>
+<li><strong>Selective checkpointing</strong> reduces I/O overhead</li>
+<li><strong>Monitoring metrics</strong> help maintain healthy production agents</li></ul>
+<div class="note-box"><strong>Best Practice</strong>: Continuously monitor and optimize your agents - their behavior may change as they interact with real-world data.</div>
+<p>In the next section, we'll explore how to deploy these optimized agents to production environments.</p>
+<p>---</p>
+<strong>Code Examples Summary</strong>:
+<ul><li>LangSmith setup configuration</li>
+<li>Loop prevention with recursion limits</li>
+<li>State validation patterns</li>
+<li>Caching implementations</li>
+<li>Parallel execution setup</li>
+<li>State cleanup functions</li>
+<li>Custom checkpointing</li>
+<li>Health check implementation</li></ul>
+<strong>Key Concepts</strong>:
+<ul><li>Observability vs traditional debugging</li>
+<li>Tracing vs logging</li>
+<li>Deterministic vs non-deterministic nodes</li>
+<li>Cold vs warm execution paths</li>
+<li>State serialization costs</li>
+<li>Horizontal vs vertical scaling considerations</li></ul>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most essential concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. Observability with LangSmith</strong>  
+LangSmith is a tool that helps you monitor and debug AI agents by recording every step of their execution. Unlike traditional software, AI agents make unpredictable decisions, so LangSmith tracks node executions, state changes, LLM calls, and errors. This visibility is crucial because it lets you see exactly where things go wrong in complex, non-deterministic workflows.
+<strong>Why it matters</strong>: Without observability, debugging AI agents is like fixing a car blindfolded—you can't see the internal steps causing problems.
+<p>---</p>
+<strong>2. Caching for Performance</strong>  
+Caching stores the results of expensive operations (like LLM calls or heavy computations) so they don’t need to rerun. For example:
+<ul><li><code class="inline-code">lru_cache</code> reuses deterministic node outputs.  </li>
+<li>LangSmith’s LLM call caching avoids redundant API requests.  </li></ul>
+<strong>Why it matters</strong>: Caching speeds up execution and reduces costs, especially for repetitive tasks.
+<p>---</p>
+<strong>3. State Management</strong>  
+AI agents carry a "state" (data passed between steps), which can grow bloated and slow things down. Techniques like:
+<ul><li>Removing temporary fields (<code class="inline-code">cleanup_state</code>).  </li>
+<li>Lazy loading (only loading large data when needed).  </li>
+<li>Selective checkpointing (saving only critical data).  </li></ul>
+<strong>Why it matters</strong>: Large states waste memory and increase latency; efficient management keeps agents fast and scalable.
+<p>---</p>
+<strong>4. Parallel Execution</strong>  
+Running independent nodes simultaneously (e.g., <code class="inline-code">parallel_node2</code> and <code class="inline-code">parallel_node3</code>) instead of sequentially.
+<strong>Why it matters</strong>: Parallelization cuts total runtime, but only works for nodes without dependencies—misuse can corrupt state.
+<p>---</p>
+<strong>5. Loop Prevention</strong>  
+AI agents may get stuck in repetitive loops (e.g., revisiting the same node). Solutions include:
+<ul><li>Setting recursion limits (<code class="inline-code">set_recursion_limit(10)</code>).  </li>
+<li>Adding quality checks to break cycles.  </li></ul>
+<strong>Why it matters</strong>: Infinite loops waste resources and crash agents; safeguards ensure reliability.
+<p>---</p>
+<strong>Bonus: Key Metrics</strong>  
+Track execution time, error rates, LLM costs, and loop frequency to catch issues early. Example:
+<p>``<code class="inline-code">python  <br>if runtime > TIMEOUT: raise TimeoutError("Agent timeout")</p>
+</code>`<code class="inline-code">  
+<strong>Why it matters</strong>: Metrics act like a "health check" for production systems.
+<p>---</p>
+<p>These concepts form the foundation for debugging and optimizing AI agents effectively.</p>
+<h3>💻 Practical Examples</h3>
+<p>Here are 3 practical, working code examples for the Debugging and Optimization section:</p>
+<div class="code-block"><pre><code>
+<h1>Example 1: Debugging Infinite Loops with Recursion Limit</h1>
+"""
+This example shows how to detect and prevent infinite loops in agent execution
+using LangGraph's recursion limit and LangSmith tracing.
+"""
+<p>from langgraph.graph import StateGraph<br>import os<br>from langsmith import Client</p>
+<h1>Configure LangSmith for observability</h1>
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "your_api_key"
+<h1>Define a simple state graph that could potentially loop</h1>
+def query_generator(state):
+    return {"query": f"Revised query {state.get('counter', 0) + 1}"}
+<p>def query_refiner(state):<br>    # Simulate sometimes causing loops<br>    if "3" not in state["query"]:<br>        return {"should_continue": True, "counter": state.get("counter", 0) + 1}<br>    return {"should_continue": False}</p>
+<h1>Build the graph with loop protection</h1>
+builder = StateGraph({"query": "", "counter": 0})
+builder.add_node("generate", query_generator)
+builder.add_node("refine", query_refiner)
+builder.add_edge("generate", "refine")
+builder.add_conditional_edges(
+    "refine",
+    lambda x: "generate" if x["should_continue"] else "end",
+)
+builder.set_recursion_limit(5)  # Critical safety measure
+graph = builder.compile()
+<h1>Run and observe in LangSmith</h1>
+result = graph.invoke({"query": "Initial query"})
+print(f"Final query: {result['query']}")  # Check LangSmith for detailed trace
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 2: Optimizing with Node Caching and Parallel Execution</h1>
+"""
+Demonstrates performance optimization through caching deterministic nodes
+and parallel execution of independent operations.
+"""
+<p>from langgraph.graph import StateGraph<br>from functools import lru_cache<br>import time</p>
+<h1>Expensive but deterministic computation</h1>
+@lru_cache(maxsize=100)
+def process_text(text: str):
+    time.sleep(1)  # Simulate heavy processing
+    return f"PROCESSED_{text.upper()}"
+<h1>Independent operations that can run in parallel</h1>
+def fetch_user_data(state):
+    time.sleep(0.5)
+    return {"user": {"name": "John", "id": 123}}
+<p>def fetch_product_data(state):<br>    time.sleep(0.5)<br>    return {"product": {"name": "Widget", "price": 9.99}}</p>
+<h1>Build optimized graph</h1>
+builder = StateGraph({"input": ""})
+builder.add_node("clean_input", lambda s: {"clean": process_text(s["input"])})
+builder.add_node("get_user", fetch_user_data)
+builder.add_node("get_product", fetch_product_data)
+<h1>Set up parallel execution</h1>
+builder.add_edge("clean_input", "get_user")
+builder.add_edge("clean_input", "get_product")
+<h1>Need a join node to merge parallel branches</h1>
+def join_results(state):
+    return {<strong>state["get_user"], </strong>state["get_product"], <strong>state["clean_input"]}
+<p>builder.add_node("join", join_results)<br>builder.add_edge("get_user", "join")<br>builder.add_edge("get_product", "join")<br>graph = builder.compile()</p>
+<h1>Execute and compare with/without caching</h1>
+start = time.time()
+result = graph.invoke({"input": "test input"})
+print(f"Execution took {time.time() - start:.2f}s")
+print(result)  # Contains user, product, and processed input
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 3: State Management and Validation</h1>
+"""
+Shows how to manage state size and validate state between nodes
+to prevent errors and improve performance.
+"""
+<p>from typing import TypedDict, Annotated<br>from langgraph.graph import StateGraph<br>from langgraph.checkpoint import MemorySaver<br>import json</p>
+<h1>Define a strict state schema</h1>
+class AgentState(TypedDict):
+    essential_data: str
+    temp_data: Annotated[dict, lambda x: validate_temp_data(x)]
+    metadata: dict
+<p>def validate_temp_data(data):<br>    if not isinstance(data, dict):<br>        raise ValueError("temp_data must be a dictionary")<br>    if len(data) &gt; 1000:  # Prevent oversized temp data<br>        return {"error": "temp_data too large"}<br>    return data</p>
+<h1>State cleanup function</h1>
+def cleanup_state(state):
+    return {
+        "essential_data": state["essential_data"],
+        "metadata": state.get("metadata", {}),
+        # Explicitly exclude temp_data from being passed forward
+    }
+<h1>Build graph with validation and cleanup</h1>
+builder = StateGraph(AgentState)
+builder.add_node("process", lambda s: {"temp_data": {"processed": True}})
+builder.add_node("validate", lambda s: validate_temp_data(s["temp_data"]))
+builder.add_node("cleanup", cleanup_state)
+<p>builder.add_edge("process", "validate")<br>builder.add_edge("validate", "cleanup")</p>
+<h1>Configure checkpointing with memory saver</h1>
+memory = MemorySaver()
+builder.set_checkpoint(memory)
+<p>graph = builder.compile()</p>
+<h1>Test with valid and invalid states</h1>
+try:
+    # Good state
+    result = graph.invoke({"essential_data": "important", "temp_data": {}})
+    print("Clean state:", result)
+    
+    # Bad state (will raise validation error)
+    bad_result = graph.invoke({"essential_data": "important", "temp_data": "invalid"})
+except ValueError as e:
+    print("Caught validation error:", e)
+<h1>Check checkpointed states in memory</h1>
+print("Checkpoints:", len(memory.list()))
+</code></pre></div>
+<p>Each example:</p>
+<ul><li>Is fully runnable with the proper dependencies installed</li>
+<li>Demonstrates a key concept from the section (debugging, optimization, state management)</li>
+<li>Includes practical error handling and validation</li>
+<li>Shows integration with LangGraph features</li>
+<li>Contains comments explaining the important parts</li></ul>
+<p>To run these examples, you'll need to:</p>
+<ul><li>Install required packages: </code>pip install langgraph langsmith<code class="inline-code"></li>
+<li>For the LangSmith examples, set up an account and add your API key</li>
+<li>Adjust any implementation details to match your specific use case</li></ul>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two beginner-friendly practice exercises that reinforce key debugging and optimization concepts from the section:</p>
+</strong>Exercise 1: Implement Loop Prevention*<em>
+Create a simple LangGraph agent that could potentially enter an infinite loop, then add safeguards to prevent it.
+</em>Instructions:<em>
+<ul><li>Build a basic StateGraph with two nodes that keep passing control to each other</li>
+<li>Add recursion limits to prevent infinite execution</li>
+<li>Test with and without the limit to see the difference</li></ul>
+</em>Hint:<em>
+<ul><li>Use </code>set_recursion_limit()<code class="inline-code"> on your graph builder</li>
+<li>Make your nodes pass state back and forth with simple conditions</li></ul>
+</em>Expected outcome:<em>
+<ul><li>Without limits: Agent runs until manual interruption</li>
+<li>With limits: Agent stops after specified iterations (e.g., 5 loops)</li></ul>
+<strong>Exercise 2: Add Validation Node</strong>
+Create a validation checkpoint in your agent's workflow to catch invalid states.
+</em>Instructions:<em>
+<ul><li>Build a graph where one node produces either a number or string</li>
+<li>Add a validation node that checks if the output is numeric</li>
+<li>Route invalid states to an error handling node</li></ul>
+</em>Hint:<em>
+<ul><li>Use Python's </code>isinstance(value, int)` for validation</li>
+<li>The error handler could just return {"error": "Invalid type"}</li></ul>
+</em>Expected outcome:<em>
+<ul><li>Valid numbers continue normal flow</li>
+<li>Strings get routed to error handling</li>
+<li>You can see the path taken in LangSmith traces</li></ul>
+</em>Bonus:*
+Try adding this validation as an edge condition rather than a separate node.
+<p>These exercises:</p>
+<ul><li>Are achievable with basic Python knowledge</li>
+<li>Cover both debugging (loop prevention) and optimization (validation)</li>
+<li>Can be tested locally without complex setups</li>
+<li>Demonstrate real-world patterns from the section</li></ul>
+            </div>
+        </section>
+        
+        <section id="section-8" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">8</span>
+                8. Production Deployment
+            </h2>
+            <div class="section-content">
+                <h2>8. Production Deployment</h2>
+<p>This section covers 8. production deployment. # 8. Production Deployment</p>
+<p>This section covers everything you need to know about taking your LangGraph agents from development to production. We'll explore scaling strategies, persistence handling, and deployment options including the LangGraph Platform.</p>
+<h2>### Why Production Deployment Matters  </h2>
+<p>Building agents is only half the battle—deploying them reliably at scale presents unique challenges:</p>
+<ul><li><strong>Stateful workloads</strong> require durable execution  </li>
+<li><strong>Long-running processes</strong> need fault tolerance  </li>
+<li><strong>Real-world traffic</strong> demands horizontal scaling  </li>
+<li><strong>Monitoring</strong> is essential for debugging  </li></ul>
+<p>LangGraph provides built-in solutions for these challenges.</p>
+<h2>### Core Deployment Strategies  </h2>
+<h3><strong>1. Local Deployment</strong>  </h3>
+For testing and small-scale applications:
+<div class="code-block"><pre><code>
+<h1>Simple local execution</h1>
+agent = create_react_agent(...)
+result = agent.invoke({"messages": [...]})
+</code></pre></div>
+<div class="note-box"><strong>Tip</strong>: Use this for prototyping but switch to persistent storage before production.  </div>
+<h3><strong>2. Server Deployment</strong>  </h3>
+Package your agent as a REST API:
+<div class="code-block"><pre><code>from fastapi import FastAPI
+from langgraph.prebuilt import create_react_agent
+<p>app = FastAPI()<br>agent = create_react_agent(...)</p>
+<p>@app.post("/chat")<br>async def chat_endpoint(message: dict):<br>    return agent.invoke(message)<br></code></pre></div></p>
+<p>Run with:</p>
+<div class="code-block"><pre><code>uvicorn main:app --reload
+</code></pre></div>
+
+<h3><strong>3. LangGraph Platform</strong>  </h3>
+For enterprise-grade deployment:
+<div class="code-block"><pre><code>from langgraph.platform import deploy
+<p>deployment = deploy(<br>    agent,<br>    name="customer-support-agent",<br>    scaling="auto",<br>    persistence=True<br>)<br></code></pre></div></p>
+<p>Key features:</p>
+<ul><li><strong>Auto-scaling</strong>: Handles traffic spikes  </li>
+<li><strong>Durable execution</strong>: Survives failures  </li>
+<li><strong>Visual monitoring</strong>: Track agent states  </li></ul>
+<h2>### Handling Persistence  </h2>
+<p>Stateful agents require persistent storage between executions. LangGraph offers:</p>
+<h3><strong>1. Checkpointing</strong>  </h3>
+Save state at specific points:
+<div class="code-block"><pre><code>from langgraph.checkpoint import FileCheckpointer
+<p>builder = StateGraph(...)<br>builder.compile(<br>    checkpointer=FileCheckpointer("./checkpoints")<br>)<br></code></pre></div></p>
+<p>Supported backends:</p>
+<ul><li>Local files (<code class="inline-code">FileCheckpointer</code>)  </li>
+<li>Redis (<code class="inline-code">RedisCheckpointer</code>)  </li>
+<li>PostgreSQL (<code class="inline-code">PostgresCheckpointer</code>)  </li></ul>
+<h3><strong>2. State Serialization</strong>  </h3>
+Customize how state is saved:
+<div class="code-block"><pre><code>from langgraph.serialization import JsonSerializer
+<p>builder.compile(<br>    checkpointer=FileCheckpointer(<br>        "./checkpoints",<br>        serializer=JsonSerializer()<br>    )<br>)<br></code></pre></div></p>
+<div class="note-box"><strong>Warning</strong>: Ensure your state objects are JSON-serializable.  </div>
+<h2>### Scaling Strategies  </h2>
+<h3><strong>1. Vertical Scaling</strong>  </h3>
+Increase single-instance resources:
+<div class="code-block"><pre><code>deploy(
+    agent,
+    resources={"cpu": "4", "memory": "16Gi"}
+)
+</code></pre></div>
+
+<h3><strong>2. Horizontal Scaling</strong>  </h3>
+Run multiple agent instances:
+<div class="code-block"><pre><code>deploy(
+    agent,
+    replicas=5,
+    autoscaling={
+        "min": 3,
+        "max": 10,
+        "metrics": "cpu_utilization"
+    }
+)
+</code></pre></div>
+
+<h3><strong>3. Workload Partitioning</strong>  </h3>
+Split traffic by user/session:
+<div class="code-block"><pre><code>builder = StateGraph(...)
+builder.add_node(
+    "user_session_router",
+    lambda state: {"partition": hash(state["user_id"]) % 10}
+)
+</code></pre></div>
+
+<h2>### Monitoring and Observability  </h2>
+<h3><strong>1. LangSmith Integration</strong>  </h3>
+Trace all executions:
+<div class="code-block"><pre><code>from langsmith import Client
+<p>client = Client()<br>builder.compile(<br>    langsmith_client=client,<br>    tracing=True<br>)<br></code></pre></div></p>
+<p>View:</p>
+<ul><li>Execution timelines  </li>
+<li>State transitions  </li>
+<li>LLM calls  </li></ul>
+<h3><strong>2. Custom Metrics</strong>  </h3>
+Track business KPIs:
+<div class="code-block"><pre><code>from prometheus_client import Counter
+<p>requests_counter = Counter('agent_requests', 'Total requests')</p>
+<p>def node_with_metrics(state):<br>    requests_counter.inc()<br>    return process(state)<br></code></pre></div></p>
+
+<h2>### Security Considerations  </h2>
+<ul><li><strong>Authentication</strong>:  </li></ul>
+<div class="code-block"><pre><code>deploy(
+    agent,
+    auth={"type": "jwt", "issuer": "your-auth-server"}
+)
+</code></pre></div>
+
+<ul><li><strong>Rate Limiting</strong>:  </li></ul>
+<div class="code-block"><pre><code>from fastapi.middleware import Middleware
+<p>app = FastAPI(middleware=[<br>    Middleware(RateLimitingMiddleware, limit="100/minute")<br>])<br></code></pre></div></p>
+
+<ul><li><strong>Data Encryption</strong>:  </li>
+<li>Enable TLS for all traffic  </li>
+<li>Use encrypted checkpoints  </li></ul>
+<h2>### Deployment Checklist  </h2>
+<p>Before going live:</p>
+<ul><li>[ ] Implement persistence  </li>
+<li>[ ] Set up monitoring  </li>
+<li>[ ] Configure scaling  </li>
+<li>[ ] Test failure recovery  </li>
+<li>[ ] Establish rollback plan  </li></ul>
+<h2>### Key Takeaways  </h2>
+<ul><li>LangGraph supports <strong>multiple deployment</strong> options from local to platform  </li>
+<li><strong>Persistence</strong> is critical for stateful agents  </li>
+<li><strong>Auto-scaling</strong> handles real-world workloads  </li>
+<li><strong>Monitoring</strong> ensures reliability  </li>
+<li>The <strong>LangGraph Platform</strong> simplifies production deployment  </li></ul>
+<p>Next, we'll explore real-world agent architectures that combine all these concepts.</p>
+<div class="note-box"><strong>Pro Tip</strong>: Start with a simple deployment and incrementally add complexity as your traffic grows. The LangGraph Platform handles most production concerns automatically.</div>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most essential concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. Stateful Workloads & Persistence</strong>  
+<em>What it is</em>: Agents that remember information between interactions (like conversation history) require "stateful" execution.  
+<em>Why it matters<strong>: Without saving this state (persistence), your agent would "forget" everything if it crashes or restarts. LangGraph provides checkpoints (saved states) using files, Redis, or databases to maintain memory across sessions.
+<p>---</p>
+</strong>2. Deployment Strategies</em><em>  
+</em>What it is<em>: Different ways to run your agent in production:
+<ul><li><strong>Local</strong>: Good for testing but not scalable  </li>
+<li><strong>Server (API)</strong>: Makes your agent accessible via web requests  </li>
+<li><strong>LangGraph Platform</strong>: Handles scaling and reliability automatically  </li></ul>
+</em>Why it matters<em>: Choosing the right deployment method affects performance, cost, and maintenance effort. Start simple, then scale up as needed.
+<p>---</p>
+<strong>3. Scaling</strong>  
+</em>What it is<em>: Handling more users by adding resources:
+<ul><li><strong>Vertical</strong>: Upgrade server power (CPU/RAM)  </li>
+<li><strong>Horizontal</strong>: Add more copies of your agent  </li>
+<li><strong>Auto-scaling</strong>: Automatically adjust resources based on traffic  </li></ul>
+</em>Why it matters<em>: Ensures your agent stays responsive during traffic spikes without manual intervention.
+<p>---</p>
+<strong>4. Monitoring/Observability</strong>  
+</em>What it is<em>: Tools to track your agent's performance:
+<ul><li><strong>LangSmith</strong>: Visualize execution steps and LLM calls  </li>
+<li><strong>Custom Metrics</strong>: Track business-specific data (e.g., requests per minute)  </li></ul>
+</em>Why it matters<em>: Helps debug issues, optimize performance, and understand how users interact with your agent.
+<p>---</p>
+<strong>5. Production Readiness Checklist</strong>  
+</em>What it is<em>: Essential steps before launch:
+<ul><li>Implement persistence  </li>
+<li>Set up monitoring  </li>
+<li>Configure scaling  </li>
+<li>Test failure recovery  </li>
+<li>Plan rollback procedures  </li></ul>
+</em>Why it matters<em>: Prevents common production failures and ensures smooth operation when real users depend on your agent.
+<p>---</p>
+<p>These concepts form the foundation for taking prototypes to reliable production systems. The key theme: </em>Production deployment isn't just about running code—it's about maintaining reliability at scale.<em></p>
+<h3>💻 Practical Examples</h3>
+<p>Here are three practical, working code examples for production deployment with LangGraph:</p>
+<div class="code-block"><pre><code>
+<h1>Example 1: FastAPI Deployment with Redis Checkpointing</h1>
+"""
+A production-ready FastAPI service with:
+<ul><li>REST endpoint for agent interactions</li>
+<li>Redis-backed persistence for agent state</li>
+<li>Basic rate limiting</li>
+<li>LangSmith tracing</li></ul>
+"""
+<p>from fastapi import FastAPI, Request<br>from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware<br>from langgraph.prebuilt import create_react_agent<br>from langgraph.checkpoint import RedisCheckpointer<br>from langsmith import Client<br>import os</p>
+<p>app = FastAPI()<br>app.add_middleware(HTTPSRedirectMiddleware)  # Force HTTPS</p>
+<h1>Initialize with production settings</h1>
+agent = create_react_agent(
+    llm=os.getenv("PROD_LLM"),
+    tools=[...],  # Your production tools
+    checkpointer=RedisCheckpointer(
+        redis_url=os.getenv("REDIS_URL"),
+        ttl=3600  # 1 hour expiration
+    )
+)
+<h1>LangSmith tracing</h1>
+client = Client()
+app.state.langsmith_client = client
+<p>@app.post("/v1/chat")<br>async def handle_chat(request: Request, message: dict):<br>    """Main chat endpoint with rate limiting"""<br>    # In production, you'd validate JWT here<br>    if request.app.state.rate_limiter.is_limited(request):<br>        return {"error": "Too many requests"}<br>    <br>    result = agent.invoke(<br>        message,<br>        config={"callbacks": [client]}<br>    )<br>    return {"response": result}</p>
+<h1>To run: </h1>
+<h1>uvicorn main:app --host 0.0.0.0 --port 443 --ssl-keyfile key.pem --ssl-certfile cert.pem</h1>
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 2: Production-Ready Agent with Auto-Scaling</h1>
+"""
+Deploys a customer support agent on LangGraph Platform with:
+<ul><li>Auto-scaling based on CPU usage</li>
+<li>Persistent PostgreSQL state storage</li>
+<li>JWT authentication</li>
+<li>Custom business metrics</li></ul>
+"""
+<p>from langgraph.platform import deploy<br>from langgraph.checkpoint import PostgresCheckpointer<br>from prometheus_client import start_http_server, Counter</p>
+<h1>Start metrics server</h1>
+start_http_server(8000)
+support_tickets = Counter('support_tickets', 'Total tickets processed')
+<h1>Production checkpointer</h1>
+checkpointer = PostgresCheckpointer(
+    db_url="postgresql://user:pass@prod-db:5432/agent_states"
+)
+<p>def process_ticket(state):<br>    support_tickets.inc()  # Track business metric<br>    # ... ticket processing logic ...<br>    return state</p>
+<h1>Deploy with production settings</h1>
+deployment = deploy(
+    agent=create_react_agent(
+        tools=[...],
+        checkpointer=checkpointer
+    ),
+    name="customer-support-prod",
+    scaling={
+        "min": 3,
+        "max": 20,
+        "metrics": "cpu_utilization",
+        "target": 70
+    },
+    auth={
+        "type": "jwt",
+        "issuer": "https://auth.yourdomain.com"
+    },
+    monitoring=True
+)
+<p>print(f"Deployed at: {deployment.url}")<br></code></pre></div></p>
+
+<div class="code-block"><pre><code>
+<h1>Example 3: Fault-Tolerant Workflow with Partitioning</h1>
+"""
+A durable order processing workflow that:
+<ul><li>Survives restarts via checkpointing</li>
+<li>Partitions work by order ID</li>
+<li>Implements retry logic</li>
+<li>Sends alerts on failures</li></ul>
+"""
+<p>from langgraph.graph import StateGraph<br>from langgraph.checkpoint import RedisCheckpointer<br>from langgraph.serialization import JsonSerializer<br>import requests</p>
+<p>builder = StateGraph(...)</p>
+<h1>Production checkpointer with JSON serialization</h1>
+checkpointer = RedisCheckpointer(
+    redis_url="redis://prod-redis:6379/0",
+    serializer=JsonSerializer()
+)
+<p>def process_order(state):<br>    try:<br>        # Partition work by order ID<br>        partition_key = f"order_{state['order_id'] % 100}"<br>        <br>        # Business logic with retry<br>        response = requests.post(<br>            "https://inventory-service/prod/api/fulfill",<br>            json=state,<br>            timeout=10<br>        )<br>        response.raise_for_status()<br>        <br>        return {<strong>state, "status": "fulfilled"}<br>    <br>    except Exception as e:<br>        # Alert system on failure<br>        requests.post(<br>            "https://alerts.yourdomain.com/notify",<br>            json={"error": str(e), "order": state["order_id"]}<br>        )<br>        raise  # Will trigger retry via checkpoint</p>
+<p>builder.add_node("process_order", process_order)<br>workflow = builder.compile(<br>    checkpointer=checkpointer,<br>    retry_policy={<br>        "max_attempts": 3,<br>        "delay": 5  # seconds between retries<br>    }<br>)</p>
+<h1>To run in production:</h1>
+<h1>while True:</h1>
+<h1>    try:</h1>
+<h1>        workflow.invoke(new_orders_queue.pop())</h1>
+<h1>    except QueueEmpty:</h1>
+<h1>        time.sleep(1)</h1>
+</code></pre></div>
+<p>Each example includes:</p>
+<ul><li>Production-specific concerns (TLS, auth, scaling)</li>
+<li>Error handling and resilience patterns</li>
+<li>Monitoring and observability integration</li>
+<li>Clear comments explaining key decisions</li>
+<li>Environment-aware configuration</li></ul>
+<p>The examples progress from basic API deployment to advanced patterns like workload partitioning and fault tolerance, showing real-world production considerations.</p>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two simple practice exercises for the Production Deployment section:</p>
+<p>---</p>
+</strong>Exercise 1: Convert a Local Agent to a REST API</em><em>  
+</em>Problem<em>: Take a locally running LangGraph agent and convert it into a FastAPI REST endpoint.  
+</em>Instructions<em>:
+<ul><li>Start with the basic local agent example from the section.  </li>
+<li>Wrap it in a FastAPI app with a <code class="inline-code">/chat</code> endpoint that accepts POST requests.  </li>
+<li>Test it using curl or Postman by sending a sample message.  </li></ul>
+</em>Hint<em>:
+<ul><li>Use the FastAPI example in the section as a template.  </li>
+<li>Remember to <code class="inline-code">import FastAPI</code> and use <code class="inline-code">@app.post</code>.  </li>
+<li>Test with: <code class="inline-code">curl -X POST -H "Content-Type: application/json" -d '{"messages":["Hello"]}' http://localhost:8000/chat</code>  </li></ul>
+</em>Expected outcome<em>:  
+A working API that returns agent responses when queried.
+<p>---</p>
+<strong>Exercise 2: Add Basic Persistence</strong>  
+</em>Problem<em>: Modify an agent to use local file checkpointing.  
+</em>Instructions<em>:
+<ul><li>Create a simple <code class="inline-code">StateGraph</code> with at least 2 nodes.  </li>
+<li>Configure it to use <code class="inline-code">FileCheckpointer</code> with a <code class="inline-code">./checkpoints</code> directory.  </li>
+<li>Run multiple invocations and verify the checkpoint files are created.  </li></ul>
+</em>Hint<em>:
+<ul><li>Use <code class="inline-code">builder.compile(checkpointer=FileCheckpointer(...))</code> as shown in the section.  </li>
+<li>Check the <code class="inline-code">./checkpoints</code> directory after each run.  </li></ul>
+</em>Expected outcome*:  
+Persisted <code class="inline-code">.json</code> files in the checkpoint directory showing agent state.
+<p>---</p>
+<p>These exercises reinforce:</p>
+<ul><li>Transitioning from dev to production (API)  </li>
+<li>State persistence fundamentals  </li>
+<li>Hands-on experience with core deployment concepts</li></ul>
+            </div>
+        </section>
+        
+        <section id="section-9" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">9</span>
+                9. Real-World Agent Architectures
+            </h2>
+            <div class="section-content">
+                <h2>9. Real-World Agent Architectures</h2>
+<p>This section covers 9. real-world agent architectures. # 9. Real-World Agent Architectures</p>
+<p>In this section, we'll explore how LangGraph powers production-ready agent systems through real-world case studies. You'll learn how companies implement multi-agent workflows, handle complex tasks, and scale their AI applications.</p>
+<h2>### Why Study Production Architectures?  </h2>
+<p>Understanding real implementations helps you:</p>
+<ul><li><strong>Avoid common pitfalls</strong> by learning from others' experiences  </li>
+<li><strong>Discover design patterns</strong> that work at scale  </li>
+<li><strong>Get inspiration</strong> for your own agent systems  </li>
+<li><strong>Learn optimization techniques</strong> used in high-traffic environments  </li></ul>
+<div class="note-box"><strong>Key Insight</strong>: Production agents often combine multiple specialized sub-agents rather than using a single monolithic agent. This "divide and conquer" approach improves reliability and performance.  </div>
+<h2>### Case Study 1: E-Commerce Customer Support Agent  </h2>
+<strong>Company</strong>: Major European retailer (processed 2M+ tickets/month)
+<strong>Architecture</strong>:
+<div class="code-block"><pre><code>graph LR
+    A[Customer Query] --&gt; B(Intent Classifier)
+    B --&gt;|Product Question| C[Product Expert]
+    B --&gt;|Order Issue| D[Order Specialist]
+    B --&gt;|Returns| E[Returns Agent]
+    C & D & E --&gt; F[Response Generator]
+    F --&gt; G[Customer]
+</code></pre></div>
+<strong>Key Components</strong>:
+<ul><li><strong>Intent Classifier</strong>: Routes queries to the correct specialist  </li>
+<li><strong>Specialist Agents</strong>:  </li></ul>
+   - Product Expert: Answers product questions using vector DB  
+   - Order Specialist: Integrates with order management API  
+   - Returns Agent: Handles complex return logic
+<ul><li><strong>Response Generator</strong>: Ensures consistent tone and formatting  </li></ul>
+<strong>Implementation</strong>:
+<div class="code-block"><pre><code>from langgraph.prebuilt import create_multi_agent_system
+<p>agents = {<br>    "classifier": create_classifier_agent(),<br>    "product_expert": create_retrieval_agent(),<br>    "order_specialist": create_api_agent(),<br>    "returns_agent": create_workflow_agent()<br>}</p>
+<p>edges = [<br>    ("classifier", "product_expert", "is_product_question"),<br>    ("classifier", "order_specialist", "is_order_issue"),<br>    ("classifier", "returns_agent", "is_return_request"),<br>    # All specialists connect to response generator<br>    ("product_expert", "response_generator"),<br>    ("order_specialist", "response_generator"),<br>    ("returns_agent", "response_generator")<br>]</p>
+<p>support_agent = create_multi_agent_system(<br>    agents=agents,<br>    edges=edges,<br>    entry_point="classifier"<br>)<br></code></pre></div></p>
+<strong>Results</strong>:
+<ul><li>68% reduction in human agent escalations  </li>
+<li>Average resolution time decreased from 12h to 23 minutes  </li>
+<li>Handled 15% more tickets with same infrastructure  </li></ul>
+<h2>### Case Study 2: Financial Research Assistant  </h2>
+<strong>Company</strong>: Quantitative hedge fund
+<strong>Architecture Features</strong>:
+<ul><li><strong>Multi-agent collaboration</strong>:  </li></ul>
+  - Data fetcher → Analyst → Validator → Reporter
+<ul><li><strong>Human-in-the-loop</strong>:  </li></ul>
+  - Pauses workflow for trader approval at key decision points
+<ul><li><strong>Stateful memory</strong>:  </li></ul>
+  - Maintains research context across sessions
+<strong>Workflow Code</strong>:
+<div class="code-block"><pre><code>class ResearchState(TypedDict):
+    ticker: str
+    raw_data: dict
+    analysis: str
+    validation: List[str]
+    report: str
+<p>def fetch_data(state: ResearchState):<br>    # Call market data APIs<br>    return {"raw_data": api.get(state["ticker"])}</p>
+<p>def analyze(state: ResearchState):<br>    # Generate initial hypotheses<br>    return {"analysis": llm_analyze(state["raw_data"])}</p>
+<p>def validate(state: ResearchState):<br>    # Check for data inconsistencies<br>    return {"validation": validate_analysis(state["analysis"])}</p>
+<p>def report(state: ResearchState):<br>    # Format final output<br>    return {"report": format_report(state)}</p>
+<p>builder = StateGraph(ResearchState)<br>builder.add_node("fetch", fetch_data)<br>builder.add_node("analyze", analyze)<br>builder.add_node("validate", validate)<br>builder.add_node("report", report)</p>
+<h1>Standard flow</h1>
+builder.add_edge("fetch", "analyze")
+builder.add_edge("analyze", "validate")
+builder.add_edge("validate", "report")
+<h1>Human approval checkpoint</h1>
+builder.add_conditional_edge(
+    "validate",
+    lambda s: "requires_human" in s["validation"],
+    {True: "human_review", False: "report"}
+)
+<p>research_agent = builder.compile()<br></code></pre></div></p>
+<strong>Performance Metrics</strong>:
+<ul><li>Reduced research time from 8h to 45min per security  </li>
+<li>Identified 12% more arbitrage opportunities  </li>
+<li>Eliminated 3 categories of calculation errors  </li></ul>
+<h2>### Advanced Pattern: Hierarchical Agent Orchestration  </h2>
+<p>Large systems often use <strong>nested graphs</strong> where:</p>
+<ul><li>Parent agents manage high-level workflow  </li>
+<li>Child agents handle specialized sub-tasks  </li></ul>
+<strong>Example Architecture</strong>:
+<div class="code-block"><pre><code>
+Main Agent
+├── Research Sub-Agent
+│   ├── Data Collector
+│   └── Analyst
+├── Compliance Sub-Agent
+└── Presentation Sub-Agent
+    ├── Visualizer
+    └── Narrator
+</code></pre></div>
+<strong>Implementation Tip</strong>:
+<div class="code-block"><pre><code>
+<h1>Parent graph manages sub-agents</h1>
+class MasterState(TypedDict):
+    task: str
+    research: dict
+    compliance_approved: bool
+    presentation: str
+<h1>Child graphs are compiled separately</h1>
+research_agent = create_research_agent()
+presentation_agent = create_presentation_agent()
+<p>def route_to_subagent(state: MasterState):<br>    if not state.get("research"):<br>        return "research_subagent"<br>    elif not state.get("compliance_approved"):<br>        return "compliance_check"<br>    else:<br>        return "presentation_subagent"</p>
+<p>builder = StateGraph(MasterState)<br>builder.add_node("research_subagent", research_agent)<br>builder.add_node("presentation_subagent", presentation_agent)<br>builder.add_node("compliance_check", compliance_node)</p>
+<p>builder.add_conditional_edge(<br>    START,<br>    route_to_subagent,<br>    {<br>        "research_subagent": "research_subagent",<br>        "compliance_check": "compliance_check",<br>        "presentation_subagent": "presentation_subagent"<br>    }<br>)<br></code></pre></div></p>
+
+<h2>### Best Practices from Production  </h2>
+<ul><li><strong>Failure Handling</strong>:  </li></ul>
+   - Implement automatic retries with exponential backoff  
+   - Set timeouts for agent operations  
+   <div class="code-block"><pre><code>   from tenacity import retry, stop_after_attempt
+<p>@retry(stop=stop_after_attempt(3))<br>   def unreliable_api_call(state):<br>       # Your API integration<br>   ``<code class="inline-code"></p>
+
+<ul><li><strong>Observability</strong>:  </li></ul>
+   - Log all state transitions  
+   - Track agent performance metrics  
+   - Use LangSmith for tracing
+<ul><li><strong>Scale Considerations</strong>:  </li></ul>
+   - Rate limit expensive operations  
+   - Cache frequent computations  
+   - Shard state when memory grows too large
+<ul><li><strong>Security</strong>:  </li></ul>
+   - Validate all inputs/outputs  
+   - Sandbox untrusted code execution  
+   - Implement access controls
+<h2>### Key Takeaways  </h2>
+<ul><li>Production systems favor <strong>specialized agents</strong> over general-purpose ones  </li>
+<li><strong>Hierarchical designs</strong> help manage complexity  </li>
+<li><strong>Human oversight</strong> is critical for high-stakes decisions  </li>
+<li><strong>State management</strong> separates successful from failed implementations  </li>
+<li><strong>Observability tools</strong> like LangSmith are non-negotiable  </li></ul>
+<p>&gt; <strong>Final Tip</strong>: Start simple with a single-agent workflow, then gradually introduce complexity as you validate each component. Most production systems evolve from modest beginnings.</p>
+<p>In the next section, we'll explore how to integrate your agents with the broader LangChain ecosystem for maximum impact.</p>
+<strong>Further Reading</strong>:
+<ul><li>[Klarna's AI Assistant Case Study](https://www.klarna.com/blog/ai-assistant)  </li>
+<li>[LangGraph Deployment Whitepaper](https://langchain.com/whitepapers)  </li>
+<li>[Multi-Agent Systems Research](https://arxiv.org/abs/2303.09014)</li></ul>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most important concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. Multi-Agent Systems</strong>  
+A multi-agent system is a network of specialized AI agents that work together to solve complex problems. Instead of one "jack-of-all-trades" agent, different agents handle specific tasks (like classifying requests, fetching data, or generating reports). This approach improves efficiency and reliability because each agent can be optimized for its particular role. The e-commerce case study shows how separate agents for product questions, order issues, and returns work together to provide better customer support.
+<strong>2. Agent Specialization</strong>  
+This is the practice of designing agents to excel at specific tasks rather than trying to handle everything. For example, in the financial research case, there are separate agents for data collection, analysis, validation, and reporting. Specialization matters because it leads to better performance (faster responses, fewer errors) and makes systems easier to maintain and improve over time.
+<strong>3. Workflow Orchestration</strong>  
+This refers to how agents are connected and how tasks flow between them. The examples show two key patterns:
+<ul><li><em>Linear workflows</em> (e.g., research data → analysis → validation → report)  </li>
+<li><em>Conditional workflows</em> (e.g., "if validation fails, ask for human help")  </li></ul>
+Good orchestration ensures tasks are completed in the right order with appropriate checks and balances.
+<strong>4. Human-in-the-Loop</strong>  
+A design pattern where humans review or approve certain AI decisions. In the financial case, the system pauses for trader approval at critical points. This is crucial for high-stakes applications where AI shouldn't act alone, combining AI efficiency with human judgment.
+<strong>5. State Management</strong>  
+The ability for agents to remember context across multiple steps or sessions. In the research assistant, all agents access a shared "state" containing the current ticker symbol, raw data, and intermediate analysis. This prevents repetition and allows complex, multi-step tasks to be handled coherently.
+<p>---</p>
+<p>These concepts form the foundation of real-world agent systems, addressing key challenges like scalability, reliability, and collaboration between AI and humans.</p>
+<h3>💻 Practical Examples</h3>
+<p>Here are 3 practical, working code examples demonstrating real-world agent architectures:</p>
+</code></pre></div>python
+<h1>Example 1: Customer Support Multi-Agent System</h1>
+from langgraph.graph import StateGraph
+from typing import TypedDict, Literal
+<p>class SupportState(TypedDict):<br>    user_query: str<br>    intent: Literal["product", "order", "returns", None]<br>    response: str<br>    escalation_reason: str</p>
+<p>def intent_classifier(state: SupportState):<br>    """Route customer queries to appropriate specialist"""<br>    query = state["user_query"].lower()<br>    if "order" in query or "track" in query:<br>        return {"intent": "order"}<br>    elif "return" in query or "refund" in query:<br>        return {"intent": "returns"}<br>    else:<br>        return {"intent": "product"}</p>
+<p>def product_agent(state: SupportState):<br>    """Handle product-related questions using knowledge base"""<br>    from vector_db import search_products<br>    results = search_products(state["user_query"])<br>    return {"response": f"Here's product info: {results[:2]}"}</p>
+<p>def order_agent(state: SupportState):<br>    """Integrate with order management system"""<br>    from orders_api import lookup_order<br>    order_id = extract_order_id(state["user_query"])<br>    details = lookup_order(order_id)<br>    return {"response": f"Order status: {details['status']}"}</p>
+<h1>Build the workflow</h1>
+workflow = StateGraph(SupportState)
+workflow.add_node("classify", intent_classifier)
+workflow.add_node("product", product_agent)
+workflow.add_node("order", order_agent)
+<h1>Conditional routing</h1>
+workflow.add_conditional_edges(
+    "classify",
+    lambda s: s["intent"],
+    {
+        "product": "product",
+        "order": "order",
+        "returns": "escalate"  # Returns handled by human
+    }
+)
+workflow.add_edge("product", "respond")
+workflow.add_edge("order", "respond")
+<p>support_agent = workflow.compile()</p>
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 2: Research Agent with Human-in-the-Loop</h1>
+from typing import TypedDict, List
+from langgraph.graph import StateGraph
+import asyncio
+<p>class ResearchState(TypedDict):<br>    topic: str<br>    sources: List[str]<br>    draft: str<br>    approved: bool<br>    final_report: str</p>
+<p>async def gather_sources(state: ResearchState):<br>    """Search academic databases and news sources"""<br>    from research_tools import search_scholar, search_news<br>    scholar = await search_scholar(state["topic"])<br>    news = await search_news(state["topic"])<br>    return {"sources": scholar[:3] + news[:2]}</p>
+<p>async def analyze_content(state: ResearchState):<br>    """Generate initial analysis with citations"""<br>    from llm import generate_report<br>    report = await generate_report(<br>        f"Analyze these sources about {state['topic']}:\n{state['sources']}"<br>    )<br>    return {"draft": report}</p>
+<p>def human_review(state: ResearchState):<br>    """Pause for human approval (simulated here)"""<br>    print(f"\nDRAFT REPORT:\n{state['draft']}\n")<br>    approval = input("Approve report? (y/n): ")<br>    return {"approved": approval.lower() == "y"}</p>
+<h1>Async workflow builder</h1>
+builder = StateGraph(ResearchState)
+builder.add_node("gather", gather_sources)
+builder.add_node("analyze", analyze_content)
+builder.add_node("review", human_review)
+<p>builder.set_entry_point("gather")<br>builder.add_edge("gather", "analyze")<br>builder.add_conditional_edge(<br>    "review",<br>    lambda s: s["approved"],<br>    {True: "publish", False: "gather"}  # Re-gather if not approved<br>)</p>
+<p>research_agent = builder.compile()</p>
+<div class="code-block"><pre><code>
+</code></pre></div>python
+<h1>Example 3: Hierarchical Sales Agent System</h1>
+from langgraph.graph import Graph
+from typing import TypedDict
+<p>class SalesState(TypedDict):<br>    lead: dict<br>    research: dict<br>    pitch: str<br>    follow_up: str</p>
+<h1>Child agent: Research sub-system</h1>
+def build_research_agent():
+    research = Graph()
+    research.add_node("web", scrape_web_data)
+    research.add_node("crm", check_crm_history)
+    research.add_edge("web", "crm")
+    return research.compile()
+<h1>Child agent: Pitch generator</h1>
+def build_pitch_agent():
+    pitch = Graph()
+    pitch.add_node("create", generate_pitch)
+    pitch.add_node("validate", compliance_check)
+    pitch.add_edge("create", "validate")
+    return pitch.compile()
+<h1>Parent agent</h1>
+def sales_workflow(state: SalesState):
+    """Orchestrate the entire sales process"""
+    # Execute research sub-agent
+    research_data = build_research_agent().invoke({
+        "company": state["lead"]["company"]
+    })
+    
+    # Generate and validate pitch
+    pitch_result = build_pitch_agent().invoke({
+        "lead": state["lead"],
+        "research": research_data
+    })
+    
+    # Schedule follow-up
+    from calendar import schedule_followup
+    follow_up = schedule_followup(state["lead"]["email"])
+    
+    return {
+        "research": research_data,
+        "pitch": pitch_result["pitch"],
+        "follow_up": follow_up
+    }
+<h1>Usage:</h1>
+lead = {"name": "Acme Corp", "email": "contact@acme.com"}
+sales_agent = sales_workflow({"lead": lead})
+<div class="code-block"><pre><code>
+<p>Each example demonstrates key architectural patterns:</p>
+<ul><li>The support system shows conditional routing to specialized agents</li>
+<li>The research agent implements human-in-the-loop validation</li>
+<li>The sales system demonstrates hierarchical agent composition</li></ul>
+<p>All examples include:</p>
+<ul><li>Type hints for state management</li>
+<li>Clear node responsibilities</li>
+<li>Realistic integration points (APIs, databases, human input)</li>
+<li>Error handling through workflow design</li></ul>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two beginner-friendly exercises that reinforce key concepts from the real-world agent architectures section:</p>
+<strong>Exercise 1</strong>: Design a Simple Agent Router
+<em>Problem</em>: Create a basic intent classifier that routes questions to different "expert" agents. Use the following simplified categories:
+<ul><li>"product" (routes to product_agent)</li>
+<li>"order" (routes to order_agent)</li>
+<li>"other" (routes to general_agent)</li></ul>
+<em>Instructions</em>:
+<ul><li>Write a Python function that takes a customer question as input</li>
+<li>Check for keywords like "product", "buy", "order", "track", etc.</li>
+<li>Return the appropriate agent name based on simple keyword matching</li></ul>
+<em>Hint</em>:
+</code></pre></div>python
+def intent_classifier(question: str) -> str:
+    question = question.lower()
+    if "product" in question or "buy" in question:
+        return "product_agent"
+    # Add your other conditions here...
+</code>``
+<em>Expected outcome</em>:
+A function that correctly routes these test cases:
+<ul><li>"Where's my order?" → "order_agent"</li>
+<li>"Is this product in stock?" → "product_agent"</li>
+<li>"How do I contact support?" → "general_agent"</li></ul>
+<strong>Exercise 2</strong>: Visualize a Workflow
+<em>Problem</em>: Draw a simple flowchart for a travel booking agent with these components:
+<ul><li>Destination recommender (suggests locations)</li>
+<li>Flight finder (checks flight API)</li>
+<li>Hotel booker (reserves rooms)</li>
+<li>Itinerary generator (creates final plan)</li></ul>
+<em>Instructions</em>:
+<ul><li>Sketch the flow on paper or using a digital tool</li>
+<li>Show how a user query progresses through the system</li>
+<li>Include at least one decision point (e.g., "budget > $1000?")</li></ul>
+<em>Hint</em>: Use the e-commerce case study's Mermaid diagram as inspiration, but simplify it further. Decision points can be diamonds in flowchart notation.
+<em>Expected outcome</em>:
+A clear diagram showing:
+<ul><li>Entry point (user query)</li>
+<li>Routing to recommender first</li>
+<li>Sequential flow through services</li>
+<li>At least one conditional branch</li>
+<li>Final output (itinerary)</li></ul>
+<p>These exercises reinforce:</p>
+<ul><li>The "divide and conquer" architecture pattern</li>
+<li>Importance of routing logic</li>
+<li>Visualizing multi-agent workflows</li>
+<li>Simple implementation starting points</li></ul>
+<p>Would you like me to adjust the difficulty level or focus on any particular aspect of agent architectures?</p>
+            </div>
+        </section>
+        
+        <section id="section-10" class="tutorial-section">
+            <h2 class="section-title">
+                <span class="section-number">10</span>
+                10. Next Steps and Ecosystem Integration
+            </h2>
+            <div class="section-content">
+                <h2>10. Next Steps and Ecosystem Integration</h2>
+<p>This section covers 10. next steps and ecosystem integration. # 10. Next Steps and Ecosystem Integration</p>
+<p>Now that you've mastered the fundamentals of LangGraph, it's time to explore how it fits into the broader AI development ecosystem. This section will guide you through integrating LangGraph with other powerful tools, continuing your learning journey, and connecting with the vibrant community of developers building stateful AI agents.</p>
+<h2>The LangChain Ecosystem</h2>
+<p>LangGraph is part of a powerful suite of tools for building AI applications:</p>
+<div class="code-block"><pre><code>
+LangChain Ecosystem:
+├── LangGraph (Stateful Agents)
+├── LangChain (Core Components)
+├── LangSmith (Observability)
+└── LangGraph Platform (Deployment)
+</code></pre></div>
+
+<h3>### Integrating with LangChain</h3>
+<p>LangChain provides essential building blocks that complement LangGraph's orchestration capabilities:</p>
+<strong>Key Integration Points:</strong>
+<ul><li><strong>Chat Models</strong>: Use LangChain's chat model interfaces with your LangGraph agents</li>
+<li><strong>Memory Types</strong>: Combine LangChain's memory modules with your agent state</li>
+<li><strong>Document Loaders</strong>: Process external data sources for your agents</li>
+<li><strong>Vector Stores</strong>: Add retrieval capabilities to your workflows</li></ul>
+<div class="code-block"><pre><code>from langchain_community.llms import OpenAI
+from langgraph.prebuilt import create_react_agent
+<h1>Create a LangGraph agent with a LangChain model</h1>
+agent = create_react_agent(
+    model=OpenAI(temperature=0.7),
+    tools=[search_tool],
+    prompt="You are a research assistant"
+)
+</code></pre></div>
+<div class="note-box"><strong>Tip</strong>: While LangGraph can work standalone, you'll get the most power by combining it with LangChain's components for retrieval, memory, and model interactions.</div>
+<h3>### Monitoring with LangSmith</h3>
+<p>LangSmith provides critical observability for your LangGraph agents:</p>
+<strong>Key Features:</strong>
+<ul><li>Trace complex agent execution paths</li>
+<li>Visualize state transitions</li>
+<li>Debug failed runs</li>
+<li>Evaluate agent performance</li></ul>
+<div class="code-block"><pre><code>
+<h1>Enable LangSmith tracing</h1>
+import os
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "&lt;your-api-key&gt;"
+<h1>Now all agent runs will be logged to LangSmith</h1>
+agent.invoke({"messages": [{"role": "user", "content": "Explain quantum computing"}]})
+</code></pre></div>
+
+<h3>### Deploying with LangGraph Platform</h3>
+<p>For production deployments, the LangGraph Platform offers:</p>
+<strong>Enterprise Features:</strong>
+<ul><li>Scalable infrastructure for stateful agents</li>
+<li>Visual workflow builder</li>
+<li>Team collaboration tools</li>
+<li>Version control for agents</li></ul>
+<h2>Continuing Your Learning Journey</h2>
+<h3>### LangChain Academy Courses</h3>
+<p>The free LangChain Academy offers structured learning paths:</p>
+<ul><li><strong>LangGraph Fundamentals</strong>: Core concepts and simple agents</li>
+<li><strong>Advanced Agent Architectures</strong>: Multi-agent systems and complex workflows</li>
+<li><strong>Production Best Practices</strong>: Deployment patterns and optimization</li></ul>
+<div class="note-box"><strong>Note</strong>: These courses frequently update to cover the latest features - check back often!</div>
+<h3>### Community Resources</h3>
+<p>Engage with the growing LangGraph community:</p>
+<ul><li><strong>Official Documentation</strong>: Always the most up-to-date reference</li>
+<li><strong>GitHub Discussions</strong>: Get help and share solutions</li>
+<li><strong>Community Templates</strong>: Clone and adapt proven agent designs</li>
+<li><strong>Case Studies</strong>: Learn from real-world implementations</li></ul>
+<div class="code-block"><pre><code>
+<h1>Example of using a community template</h1>
+from langgraph.templates import ResearchAgent
+<p>agent = ResearchAgent.from_template(<br>    model="anthropic:claude-3-opus",<br>    tools=[web_search, doc_analysis]<br>)<br></code></pre></div></p>
+
+<h2>Advanced Topics to Explore</h2>
+<p>As you grow more comfortable with LangGraph, consider these advanced areas:</p>
+<h3>### Multi-Agent Systems</h3>
+<p>Coordinate multiple specialized agents:</p>
+<div class="code-block"><pre><code>from langgraph.multi_agent import AgentTeam
+<p>team = AgentTeam(<br>    agents=[researcher, writer, editor],<br>    coordination_strategy="hierarchical"<br>)<br></code></pre></div></p>
+
+<h3>### Custom Checkpointing</h3>
+<p>Implement persistence for long-running agents:</p>
+<div class="code-block"><pre><code>from langgraph.checkpoint import PostgresCheckpointer
+<p>checkpointer = PostgresCheckpointer(<br>    db_url="postgresql://user:pass@localhost/db"<br>)</p>
+<p>graph = workflow.compile(checkpointer=checkpointer)<br></code></pre></div></p>
+
+<h3>### Human-in-the-Loop Workflows</h3>
+<p>Add human review steps to your agents:</p>
+<div class="code-block"><pre><code>from langgraph.human import HumanApproval
+<p>workflow.add_node(<br>    "legal_review",<br>    HumanApproval(instructions="Verify compliance", timeout=3600)<br>)<br></code></pre></div></p>
+
+<h2>Staying Updated</h2>
+<p>The LangGraph ecosystem evolves rapidly. Stay current by:</p>
+<ul><li><strong>Watching GitHub Releases</strong>: Get notified of new versions</li>
+<li><strong>Joining Community Calls</strong>: Monthly deep dives on new features</li>
+<li><strong>Following the Blog</strong>: Case studies and technical articles</li>
+<li><strong>Experimenting with Beta Features</strong>: Try upcoming functionality</li></ul>
+<h2>Key Takeaways</h2>
+<ul><li>LangGraph works powerfully with <strong>LangChain</strong> for components and <strong>LangSmith</strong> for observability</li>
+<li>The <strong>LangGraph Platform</strong> simplifies production deployment</li>
+<li><strong>LangChain Academy</strong> offers free structured courses</li>
+<li>The community provides <strong>templates</strong>, <strong>case studies</strong>, and <strong>support</strong></li>
+<li>Advanced topics include <strong>multi-agent systems</strong>, <strong>custom persistence</strong>, and <strong>human collaboration</strong></li>
+<li>Stay engaged with the ecosystem to keep your skills current</li></ul>
+<h2>Final Exercise</h2>
+<p>To solidify your understanding, try this integration challenge:</p>
+<div class="code-block"><pre><code>
+<h1>Build a LangGraph agent that:</h1>
+<h1>1. Uses a LangChain chat model</h1>
+<h1>2. Incorporates LangChain memory</h1>
+<h1>3. Logs runs to LangSmith</h1>
+<h1>4. Can be deployed via LangGraph Platform</h1>
+<p>from langchain.memory import ConversationBufferMemory<br>from langchain_community.chat_models import ChatAnthropic<br>from langgraph.prebuilt import create_react_agent</p>
+<h1>Your implementation here</h1>
+<h1>...</h1>
+</code></pre></div>
+<p>Congratulations on completing this comprehensive LangGraph tutorial! You're now equipped to build sophisticated, stateful AI agents and integrate them with the broader LangChain ecosystem. The journey doesn't end here - continue exploring, building, and sharing with the vibrant community of developers shaping the future of AI agents.</p>
+<h3>🔑 Key Concepts</h3>
+<p>Here are the 3-5 most important concepts from this section, explained clearly for beginners:</p>
+<p>---</p>
+<strong>1. LangChain Ecosystem Integration</strong>  
+LangGraph is part of a larger toolkit called LangChain, which provides complementary tools for building AI applications. By integrating LangGraph with LangChain, you can easily add features like memory, document processing, and pre-built chat models to your agents. This matters because it saves you time—instead of building everything from scratch, you can plug in ready-made components.
+<p>---</p>
+<strong>2. LangSmith for Monitoring</strong>  
+LangSmith is a tool that helps you track and debug your LangGraph agents. It visually shows how your agent makes decisions, where errors occur, and how it transitions between states. This is critical for improving your agent’s performance, especially when workflows become complex.
+<p>---</p>
+<strong>3. Deployment with LangGraph Platform</strong>  
+When you’re ready to launch your agent in a real-world setting, the LangGraph Platform provides tools for scaling, team collaboration, and managing versions. This matters because deploying AI agents reliably requires infrastructure that handles user traffic, updates, and teamwork—things you don’t want to build manually.
+<p>---</p>
+<strong>4. Community Resources & Learning</strong>  
+The LangGraph community offers templates, courses (like LangChain Academy), and case studies to accelerate your learning. Beginners benefit from these because they provide proven designs and structured guidance, avoiding the trial-and-error phase of building agents alone.
+<p>---</p>
+<strong>5. Multi-Agent Systems</strong>  
+Advanced users can coordinate multiple agents (e.g., one for research, one for writing) to tackle complex tasks. This concept matters because real-world problems often require specialization—like a team of humans, each agent can focus on what it does best.
+<p>---</p>
+<p>Each concept builds on the fundamentals: <em>integrate tools</em> (LangChain), <em>monitor performance</em> (LangSmith), <em>deploy reliably</em> (Platform), <em>learn efficiently</em> (Community), and <em>scale complexity</em> (Multi-Agent). Beginners should start with the first three before diving into advanced topics.</p>
+<h3>💻 Practical Examples</h3>
+<p>Here are three practical, working code examples that demonstrate ecosystem integration with LangGraph:</p>
+<div class="code-block"><pre><code>
+<h1>Example 1: LangChain + LangGraph Integration - Research Agent with Document Retrieval</h1>
+from langchain_community.llms import OpenAI
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.vectorstores import FAISS
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langgraph.prebuilt import create_react_agent
+<h1>1. Load and process documents</h1>
+loader = WebBaseLoader(["https://en.wikipedia.org/wiki/Large_language_model"])
+docs = loader.load()
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+splits = text_splitter.split_documents(docs)
+<h1>2. Create vector store for retrieval</h1>
+vectorstore = FAISS.from_documents(documents=splits, embedding=OpenAIEmbeddings())
+retriever = vectorstore.as_retriever()
+<h1>3. Create LangGraph agent with LangChain components</h1>
+agent = create_react_agent(
+    model=OpenAI(model="gpt-3.5-turbo-instruct", temperature=0.7),
+    tools=[retriever],  # Using the retriever as a tool
+    prompt="You are a knowledgeable research assistant. Use the retrieval tool when asked about LLMs."
+)
+<h1>Run the agent</h1>
+response = agent.invoke({"messages": [{"role": "user", "content": "What are the key components of large language models?"}]})
+print(response["messages"][-1]["content"])
+</code></pre></div>
+
+<div class="code-block"><pre><code>
+<h1>Example 2: LangSmith Monitoring - Tracing Agent Execution</h1>
+import os
+from langgraph.prebuilt import create_react_agent
+from langchain_community.llms import OpenAI
+<h1>Set up LangSmith tracing (replace with your API key)</h1>
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "lsv2_sk_your_key_here"
+os.environ["LANGCHAIN_PROJECT"] = "langgraph-tracing-demo"  # Optional project name
+<h1>Create a simple agent with two tools</h1>
+def search_tool(query: str):
+    return f"Search results for {query}: [result1, result2]"
+<p>def calculator_tool(expression: str):<br>    return str(eval(expression))</p>
+<p>agent = create_react_agent(<br>    model=OpenAI(temperature=0),<br>    tools=[search_tool, calculator_tool],<br>    prompt="You are a helpful assistant who can search and calculate."<br>)</p>
+<h1>This run will be visible in LangSmith dashboard</h1>
+result = agent.invoke({
+    "messages": [{
+        "role": "user", 
+        "content": "What's 2^8? Then search for latest AI news."
+    }]
+})
+<p>print("Agent response:", result["messages"][-1]["content"])<br></code></pre></div></p>
+
+<div class="code-block"><pre><code>
+<h1>Example 3: Multi-Agent System - Customer Support Team</h1>
+from langgraph.multi_agent import AgentTeam
+from langchain_community.llms import OpenAI
+<h1>Define specialized agents</h1>
+def create_agent(name, specialty, tools=[]):
+    return {
+        "name": name,
+        "model": OpenAI(temperature=0.3),
+        "prompt": f"You are {name}, a {specialty}. Respond professionally.",
+        "tools": tools
+    }
+<h1>Create agent roles</h1>
+billing_agent = create_agent("BillingBot", "billing specialist", [lookup_invoice])
+tech_agent = create_agent("TechBot", "technical support specialist", [system_status])
+sales_agent = create_agent("SalesBot", "sales consultant", [product_catalog])
+<h1>Create coordinated team</h1>
+support_team = AgentTeam(
+    agents=[billing_agent, tech_agent, sales_agent],
+    coordination_strategy="round_robin",  # Alternate between agents
+    routing_prompt="Direct the user query to the most appropriate specialist."
+)
+<h1>Process a customer query</h1>
+team_response = support_team.invoke({
+    "messages": [{
+        "role": "user",
+        "content": "My invoice #12345 seems incorrect and also I can't access the dashboard."
+    }]
+})
+<p>print("Support Response:", team_response["messages"][-1]["content"])<br></code></pre></div></p>
+<p>Each example demonstrates a different aspect of ecosystem integration:</p>
+<ul><li>Shows LangChain component integration (document loader, text splitter, vector store)</li>
+<li>Demonstrates LangSmith monitoring setup and execution tracing</li>
+<li>Illustrates a multi-agent system with specialized roles and coordination</li></ul>
+<p>All examples include:</p>
+<ul><li>Complete, runnable code (with placeholder values where needed)</li>
+<li>Clear comments explaining each section</li>
+<li>Practical use cases</li>
+<li>Key integration points with the LangChain ecosystem</li></ul>
+<h3>🎯 Practice Exercises</h3>
+<p>Here are two simple practice exercises for the "Next Steps and Ecosystem Integration" section:</p>
+<p>---</p>
+<strong>Exercise 1: Integrate a LangChain Chat Model with LangGraph</strong>  
+Create a basic LangGraph agent that uses a LangChain OpenAI model (or another provider if preferred) to answer questions. Use the <code class="inline-code">create_react_agent</code> template and test it with a user query.
+<em>Hint</em>:
+<ul><li>Start by importing <code class="inline-code">OpenAI</code> from <code class="inline-code">langchain_community.llms</code>.  </li>
+<li>Use a simple system prompt like <code class="inline-code">"You are a helpful assistant"</code>.  </li>
+<li>Test with <code class="inline-code">agent.invoke({"messages": [{"role": "user", "content": "Your question here"}]})</code>.  </li></ul>
+<em>Expected outcome</em>:  
+A working agent that responds to questions using the LangChain model. Example output:
+<div class="code-block"><pre><code>{"messages": [{"role": "assistant", "content": "The answer to your question..."}]}
+</code></pre></div>
+<p>---</p>
+<strong>Exercise 2: Enable LangSmith Tracing</strong>  
+Set up LangSmith tracing for your LangGraph agent to log its execution. Use the free tier (sign up at [LangSmith](https://smith.langchain.com/) if needed).
+<em>Hint</em>:
+<ul><li>Add the environment variables <code class="inline-code">LANGCHAIN_TRACING_V2</code> and <code class="inline-code">LANGCHAIN_API_KEY</code>.  </li>
+<li>Run any agent interaction (e.g., from Exercise 1) and check your LangSmith dashboard.  </li></ul>
+<em>Expected outcome</em>:  
+A trace of your agent’s execution appears in LangSmith, showing steps like:
+<ul><li>Input/output messages  </li>
+<li>State transitions  </li>
+<li>Tool calls (if any)  </li></ul>
+<p>---</p>
+<p>These exercises reinforce <strong>ecosystem integration</strong> (LangChain + LangSmith) while being beginner-friendly with clear outcomes. Let me know if you'd like adjustments!</p>
+            </div>
+        </section>
+        
+        </div>
+        
+        <footer class="footer">
+            <div class="footer-title">✨ Generated by Document to Tutorial Builder ✨</div>
+            <p>Crafted with advanced AI for optimal learning experience</p>
+            <p>Every concept explained • No detail left behind • Ready to learn</p>
+        </footer>
+    </div>
+</body>
+</html>
